@@ -84,7 +84,7 @@ Simfinity-2.1/
 │   ├── context/      AppContext (auth, eSIMs, currency)
 │   └── config.ts     API_BASE — auto-detects LAN IP in dev
 ├── docker-compose.yml
-└── .env              your local keys (gitignored)
+└── .env              your local key (gitignored)
 ```
 
 ---
