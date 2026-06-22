@@ -1,6 +1,6 @@
 # Simfinity — Ghana-Rooted eSIM Platform
 
-A full-stack eSIM purchasing app for Ghanaians and travellers. React Native (Expo) mobile frontend + Spring Boot backend + PostgreSQL, all containerised with Docker Compose.
+A full-stack eSIM purchasing app for Ghanaians nationwide and travellers. React Native (Expo) mobile frontend + Spring Boot Backend + PostgreSQL, all containerised with Docker Compose.
 
 ---
 
@@ -24,7 +24,7 @@ Copy the example and fill in your keys:
 cp .env.example .env
 ```
 
-Open `.env` and set:
+open `.env` and set:
 
 ```
 PAYSTACK_SECRET_KEY=sk_test_...      # from dashboard.paystack.com
@@ -91,7 +91,7 @@ Simfinity-2.1/
 
 ## How LAN detection works
 
-[mobile/config.ts](mobile/config.ts) reads `Constants.expoConfig.hostUri` which Expo sets to your machine's LAN IP when you run `expo start`. In dev mode the API base becomes `http://<LAN-IP>:3000`, so any phone on the same WiFi reaches your local backend automatically.
+[mobile/config.ts](mobile/config.ts) reads `Constants.expoConfig.hostUri` which Expo set to your machine's LAN IP when you run `expo start`. In dev mode the API base becomes `http://<LAN-IP>:3000`, so any phone on the same WiFi reaches your local backend automatically.
 
 ---
 
