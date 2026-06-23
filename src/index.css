@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-gold: #ffd700;
+  --color-gold-hover: #e6c200;
+  --color-gold-glow: rgba(255, 215, 0, 0.15);
+  --color-terracotta: #cc4e3c;
+  --color-terracotta-dark: #891d11;
+  --color-ghana-green: #006b3f;
+  --color-green-light: #94ecb4;
+  --color-charcoal: #121212;
+  --color-surface-dim: #131313;
+  --color-clay: #201f1f;
+  --color-clay-high: #2a2a2a;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: rgba(19, 19, 19, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 215, 0, 0.08);
+}
+
+.glass-panel-heavy {
+  background: rgba(19, 19, 19, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+}
+
+.glass-input {
+  background: rgba(32, 31, 31, 0.45);
+  border: 1px solid rgba(153, 144, 119, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-input:focus-within {
+  border-color: #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+}
+
+/* Adinkra & Heritage styling */
+.adinkra-pattern {
+  background-image: radial-gradient(circle at 2px 2px, rgba(255, 215, 0, 0.02) 1.5px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.kente-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+  opacity: 0.35;
+}
+
+.kente-border-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, #cc4e3c 0%, #ffd700 35%, #006b3f 70%, #ffd700 100%);
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.12);
+}
+
+/* Page transitions animations */
+@keyframes slidePush {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slidePushBack {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInSimple {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.anim-push {
+  animation: slidePush 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.anim-push-back {
+  animation: slidePushBack 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.anim-fade {
+  animation: fadeInSimple 0.25s ease-out forwards;
+}
+
+/* Slide background animation */
+@keyframes kenburns {
+  0% { opacity: 0; transform: scale(1); }
+  5% { opacity: 0.3; }
+  33% { opacity: 0.3; }
+  38% { opacity: 0; }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+
+.bg-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  animation: kenburns 24s infinite;
+}
+
+.bg-slide-1 { animation-delay: 0s; }
+.bg-slide-2 { animation-delay: 8s; }
+.bg-slide-3 { animation-delay: 16s; }
+
+@keyframes goldGlowPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(255, 215, 0, 0.65);
+    border-color: rgba(255, 215, 0, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+}
+
+.glow-active-gold {
+  animation: goldGlowPulse 2.5s infinite ease-in-out;
+}
+
+/* Simulated Smartphone Viewport Isolation */
+.phone-container {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Custom hides for native mobile scroll bars inside frame */
+.phone-container ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.phone-container ::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: 9px;
+}
+
+@keyframes scaleUpSuccess {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-up-success {
+  animation: scaleUpSuccess 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+
