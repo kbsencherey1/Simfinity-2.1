@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Simfinity",
+  "description": "A premium Neo-Ghanaian Global eSIM application which offers travelers authentic, ultra-speed local connectivity with cultural heritage insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
