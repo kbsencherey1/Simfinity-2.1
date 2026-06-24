@@ -1,6 +1,6 @@
 # Simfinity — Ghana-Rooted eSIM Platform
 
-A full-stack eSIM purchasing app for Ghanaians nationwide and travellers. React Native (Expo) mobile frontend + Spring Boot Backend + PostgreSQL, all containerised with Docker Compose.
+A full-stack eSIM purchasing app for Ghanaians nationwide and travellers. React Native (Expo) mobile frontend + Spring Boot Backend + PostgreSQL, all compiled with Docker Compose.
 
 ---
 
