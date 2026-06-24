@@ -1,0 +1,9 @@
+com\simfinity\backend\config\AppConfig.class
+com\simfinity\backend\service\GeminiService.class
+com\simfinity\backend\service\PaystackService.class
+com\simfinity\backend\config\AppConfig$1.class
+com\simfinity\backend\service\ZenditService.class
+com\simfinity\backend\SimfinityBackendApplication.class
+com\simfinity\backend\controller\InsightController.class
+com\simfinity\backend\controller\PaystackController.class
+com\simfinity\backend\controller\ZenditController.class
