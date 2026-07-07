@@ -4,20 +4,21 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Linking,
+  Pressable,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../components/styles';
 import { useApp } from '../context/AppContext';
 import { INITIAL_PLANS } from '../data';
 
-const API_BASE = '';
+import { API_BASE } from '../config';
 
 export default function CheckoutScreen() {
-  const { checkoutPlan, user, addSubscription, setProvisionedEsim } = useApp();
+  const { checkoutPlan, user, token, addSubscription, setProvisionedEsim, topUpEsim, setTopUpEsim, fetchEsims } = useApp();
   const plan = checkoutPlan ?? INITIAL_PLANS[2];
 
   const [isInitializing, setIsInitializing] = useState(false);
@@ -26,49 +27,45 @@ export default function CheckoutScreen() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  const startPayment = async () => {
-    setIsInitializing(true);
-    setPayError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/paystack/initialize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.email,
-          amountGhs: plan.priceGhs,
-          planId: plan.id,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setPaymentUrl(data.authorization_url);
-        setReference(data.reference);
-        Linking.openURL(data.authorization_url);
-      } else {
-        setPayError(data.error || 'Failed to initialize payment.');
-      }
-    } catch {
-      setPayError('Network error. Make sure the server is running.');
-    } finally {
-      setIsInitializing(false);
-    }
-  };
-
-  const verifyPayment = async () => {
-    if (!reference) return;
+  const doVerify = async (ref: string) => {
     setIsVerifying(true);
     setPayError(null);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/paystack/verify/${reference}?planId=${plan.id}&email=${encodeURIComponent(user.email)}&dataGb=${parseInt(plan.dataGb)}`
-      );
+      const body: Record<string, unknown> = {
+        planId: plan.id,
+        planName: plan.name,
+        dataGb: plan.dataGb,
+        validityDays: plan.validityDays,
+        amountGhs: plan.priceGhs,
+      };
+      if (topUpEsim?.iccid) {
+        body.targetIccid = topUpEsim.iccid;
+      }
+      const res = await fetch(`${API_BASE}/api/paystack/verify/${ref}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      });
       const data = await res.json();
       if (res.ok && data.success) {
-        setProvisionedEsim(data.esim);
-        addSubscription(plan);
-        router.push('/activate-esim');
+        if (data.isTopUp) {
+          setTopUpEsim(null);
+          if (token) fetchEsims(token);
+          Alert.alert(
+            'Data Added',
+            `Your data top-up for "${plan.name}" was successful!`,
+            [{ text: 'OK', onPress: () => router.replace('/(tabs)/my-esims') }]
+          );
+        } else {
+          setProvisionedEsim(data.esim);
+          addSubscription(plan);
+          router.push('/activate-esim');
+        }
       } else {
-        setPayError(data.error || 'Verification failed. Complete the transaction first.');
+        setPayError(data.error || 'Payment not yet confirmed. Complete the transaction and try again.');
       }
     } catch {
       setPayError('Verification error. Please try again.');
@@ -77,13 +74,56 @@ export default function CheckoutScreen() {
     }
   };
 
+  const startPayment = async () => {
+    setIsInitializing(true);
+    setPayError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/paystack/initialize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          email: user.email,
+          amountGhs: plan.priceGhs,
+          planId: plan.id,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const ref = data.reference;
+        const authUrl = data.authorization_url;
+        setPaymentUrl(authUrl);
+        setReference(ref);
+        // Open Paystack in in-app browser; auto-closes when Paystack redirects to simfinity://
+        await WebBrowser.openAuthSessionAsync(authUrl, 'simfinity://');
+        // Auto-verify once the browser closes (via redirect or manual close)
+        await doVerify(ref);
+      } else {
+        setPayError(data.error || 'Failed to initialize payment.');
+      }
+    } catch {
+      setPayError('Cannot reach the server. Check your network or that the backend is running.');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  const verifyPayment = () => {
+    if (reference) doVerify(reference);
+  };
+
   return (
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable
+          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerLabel}>SECURE CHECKOUT</Text>
+        </Pressable>
+        <Text style={styles.headerLabel}>{topUpEsim ? 'TOP UP DATA' : 'SECURE CHECKOUT'}</Text>
         <View style={{ width: 36 }} />
       </SafeAreaView>
 
@@ -106,18 +146,24 @@ export default function CheckoutScreen() {
 
           <View style={styles.planStatsRow}>
             <View style={styles.planStat}>
-              <Text style={styles.planStatIcon}>🗄️</Text>
+              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
+                <Text style={styles.planStatIconText}>D</Text>
+              </View>
               <Text style={styles.planStatValue}>{plan.dataGb}</Text>
               <Text style={styles.planStatLabel}>Data</Text>
             </View>
             <View style={styles.planStat}>
-              <Text style={styles.planStatIcon}>📅</Text>
+              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(148,236,180,0.1)' }]}>
+                <Text style={[styles.planStatIconText, { color: COLORS.greenLight }]}>V</Text>
+              </View>
               <Text style={styles.planStatValue}>{plan.validityDays}d</Text>
               <Text style={styles.planStatLabel}>Validity</Text>
             </View>
             <View style={styles.planStat}>
-              <Text style={styles.planStatIcon}>📶</Text>
-              <Text style={styles.planStatValue}>{plan.speed}</Text>
+              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
+                <Text style={styles.planStatIconText}>5G</Text>
+              </View>
+              <Text style={styles.planStatValue} numberOfLines={2}>{plan.speed}</Text>
               <Text style={styles.planStatLabel}>Speed</Text>
             </View>
           </View>
@@ -126,12 +172,14 @@ export default function CheckoutScreen() {
         {/* Specs bento */}
         <View style={styles.bentoRow}>
           {[
-            { icon: '📡', text: plan.speed },
-            { icon: '🎧', text: '24/7 Support' },
-            { icon: '⚡', text: 'Instant Setup' },
+            { letter: 'N', color: '#cc4e3c', bg: 'rgba(204,78,60,0.1)', text: plan.speed },
+            { letter: '24', color: COLORS.gold, bg: 'rgba(255,215,0,0.08)', text: '24/7 Priority Support' },
+            { letter: 'F', color: COLORS.greenLight, bg: 'rgba(148,236,180,0.08)', text: 'Instant Setup' },
           ].map(s => (
             <View key={s.text} style={[glass.panel, styles.bento]}>
-              <Text style={styles.bentoIcon}>{s.icon}</Text>
+              <View style={[styles.bentoIconBox, { backgroundColor: s.bg }]}>
+                <Text style={[styles.bentoIconText, { color: s.color }]}>{s.letter}</Text>
+              </View>
               <Text style={styles.bentoText}>{s.text}</Text>
             </View>
           ))}
@@ -139,28 +187,39 @@ export default function CheckoutScreen() {
 
         {/* Cultural insight */}
         <View style={[glass.panel, styles.culturalCard]}>
-          <Text style={styles.culturalLabel}>CULTURAL INSIGHT</Text>
-          <Text style={styles.culturalTitle}>{plan.culturalInsightTitle}</Text>
+          <View style={styles.culturalIconRow}>
+            <View style={styles.culturalIcon}>
+              <Text style={styles.culturalIconLetter}>C</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.culturalLabel}>CULTURAL INSIGHT</Text>
+              <Text style={styles.culturalTitle}>{plan.culturalInsightTitle}</Text>
+            </View>
+          </View>
           <Text style={styles.culturalDesc}>{plan.culturalInsightDesc}</Text>
         </View>
 
         {/* Payment feedback */}
         {reference && (
           <View style={[glass.panel, styles.paymentBox]}>
-            <Text style={styles.paymentTitle}>🔑 Paystack Gateway Active</Text>
+            <View style={styles.paymentPingRow}>
+              <View style={styles.paymentPingDot} />
+              <Text style={styles.paymentTitle}>Paystack Secure Gateway Active</Text>
+            </View>
             <Text style={styles.paymentSub}>
-              A payment page opened for <Text style={{ color: '#fff', fontWeight: '700' }}>GHS {plan.priceGhs}</Text>.
+              A secure Paystack sandbox payment page opened for{' '}
+              <Text style={{ color: '#fff', fontWeight: '700' }}>GHS {plan.priceGhs}</Text>.
               Complete it, then tap Verify.
             </Text>
             <View style={styles.paymentBtns}>
-              <TouchableOpacity
-                style={styles.reopenBtn}
-                onPress={() => paymentUrl && Linking.openURL(paymentUrl)}
+              <Pressable
+                style={({ pressed }) => [styles.reopenBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => paymentUrl && WebBrowser.openAuthSessionAsync(paymentUrl, 'simfinity://')}
               >
-                <Text style={styles.reopenBtnText}>Reopen</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.verifyBtn, isVerifying && { opacity: 0.6 }]}
+                <Text style={styles.reopenBtnText}>Reopen Portal</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.verifyBtn, isVerifying && { opacity: 0.6 }, pressed && { opacity: 0.8 }]}
                 onPress={verifyPayment}
                 disabled={isVerifying}
               >
@@ -169,47 +228,60 @@ export default function CheckoutScreen() {
                 ) : (
                   <Text style={styles.verifyBtnText}>Verify Payment</Text>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         )}
 
         {payError && (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠ {payError}</Text>
+            <Text style={styles.errorText}>{payError}</Text>
           </View>
         )}
       </ScrollView>
 
-      {/* Sticky CTA */}
-      {!reference && (
-        <View style={styles.stickyBar}>
-          <TouchableOpacity
-            style={[styles.payBtn, isInitializing && { opacity: 0.6 }]}
+      {/* Sticky CTA — shows Pay when no reference, Verify when reference exists */}
+      <View style={styles.stickyBar}>
+        {!reference ? (
+          <Pressable
+            style={({ pressed }) => [styles.payBtn, isInitializing && { opacity: 0.6 }, pressed && styles.payBtnPressed]}
             onPress={startPayment}
             disabled={isInitializing}
-            activeOpacity={0.85}
           >
             {isInitializing ? (
               <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.payBtnText}>Pay GHS {plan.priceGhs} via Paystack</Text>
+              <Text style={styles.payBtnText}>{topUpEsim ? `Top Up GHS ${plan.priceGhs}` : `Secure Pay GHS ${plan.priceGhs}`}</Text>
             )}
-          </TouchableOpacity>
-        </View>
-      )}
+          </Pressable>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [styles.payBtn, isVerifying && { opacity: 0.6 }, pressed && styles.payBtnPressed]}
+            onPress={verifyPayment}
+            disabled={isVerifying}
+          >
+            {isVerifying ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={styles.payBtnText}>Verify Payment & Get eSIM</Text>
+            )}
+          </Pressable>
+        )}
+        <Text style={styles.stickyNote}>Encrypted & Secure checkout powered by Paystack</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.surface },
+  root: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: 'rgba(19,19,19,0.95)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(77,71,50,0.3)',
   },
@@ -225,9 +297,10 @@ const styles = StyleSheet.create({
   },
   backIcon: { color: '#fff', fontSize: 18, fontWeight: '700' },
   headerLabel: { color: COLORS.gold, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
-  scroll: { padding: 16, gap: 14, paddingBottom: 100 },
+  scroll: { padding: 16, gap: 14, paddingBottom: 120 },
   title: { color: '#fff', fontSize: 22, fontWeight: '800', textAlign: 'center' },
   sub: { color: COLORS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },
+
   planCard: { padding: 18, gap: 16 },
   planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   planTier: { color: '#cc4e3c', fontSize: 9, fontWeight: '800', letterSpacing: 1, marginBottom: 4 },
@@ -235,21 +308,51 @@ const styles = StyleSheet.create({
   planPriceBox: { alignItems: 'flex-end' },
   planPrice: { color: COLORS.gold, fontSize: 20, fontWeight: '800' },
   planPriceAlt: { color: COLORS.textDim, fontSize: 10 },
-  planStatsRow: { flexDirection: 'row', justifyContent: 'space-around', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 14 },
-  planStat: { alignItems: 'center', gap: 4 },
-  planStatIcon: { fontSize: 20 },
-  planStatValue: { color: '#fff', fontSize: 13, fontWeight: '800', textAlign: 'center' },
+  planStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+    paddingTop: 14,
+  },
+  planStat: { alignItems: 'center', gap: 6, flex: 1 },
+  planStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planStatIconText: { color: COLORS.gold, fontSize: 10, fontWeight: '900' },
+  planStatValue: { color: '#fff', fontSize: 12, fontWeight: '800', textAlign: 'center' },
   planStatLabel: { color: COLORS.textDim, fontSize: 9, fontWeight: '600' },
+
   bentoRow: { flexDirection: 'row', gap: 10 },
-  bento: { flex: 1, padding: 12, alignItems: 'center', gap: 4 },
-  bentoIcon: { fontSize: 20 },
+  bento: { flex: 1, padding: 12, alignItems: 'center', gap: 6 },
+  bentoIconBox: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  bentoIconText: { fontSize: 10, fontWeight: '900' },
   bentoText: { color: COLORS.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center' },
-  culturalCard: { padding: 16, gap: 6, borderLeftWidth: 3, borderLeftColor: COLORS.gold },
+
+  culturalCard: { padding: 16, gap: 10, borderLeftWidth: 3, borderLeftColor: COLORS.gold },
+  culturalIconRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  culturalIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  culturalIconLetter: { color: COLORS.gold, fontSize: 14, fontWeight: '900' },
   culturalLabel: { color: COLORS.gold, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  culturalTitle: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  culturalTitle: { color: '#fff', fontSize: 13, fontWeight: '700', marginTop: 2 },
   culturalDesc: { color: COLORS.textMuted, fontSize: 11, lineHeight: 17 },
-  paymentBox: { padding: 16, gap: 10 },
-  paymentTitle: { color: COLORS.gold, fontSize: 14, fontWeight: '700' },
+
+  paymentBox: { padding: 16, gap: 10, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
+  paymentPingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  paymentPingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.gold },
+  paymentTitle: { color: COLORS.gold, fontSize: 13, fontWeight: '700' },
   paymentSub: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18 },
   paymentBtns: { flexDirection: 'row', gap: 10 },
   reopenBtn: {
@@ -263,6 +366,7 @@ const styles = StyleSheet.create({
   reopenBtnText: { color: COLORS.gold, fontSize: 12, fontWeight: '700' },
   verifyBtn: { flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: COLORS.gold, alignItems: 'center' },
   verifyBtnText: { color: '#000', fontSize: 12, fontWeight: '800' },
+
   errorBox: {
     backgroundColor: 'rgba(204,78,60,0.1)',
     borderWidth: 1,
@@ -271,16 +375,22 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   errorText: { color: '#cc4e3c', fontSize: 12, lineHeight: 18 },
+
   stickyBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     padding: 16,
+    paddingBottom: 28,
     backgroundColor: 'rgba(19,19,19,0.97)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(77,71,50,0.3)',
+    gap: 8,
+    alignItems: 'center',
   },
-  payBtn: { backgroundColor: COLORS.gold, paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  payBtn: { backgroundColor: COLORS.gold, paddingVertical: 16, borderRadius: 12, alignItems: 'center', width: '100%' },
+  payBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.98 }] },
   payBtnText: { color: '#000', fontWeight: '800', fontSize: 15 },
+  stickyNote: { color: COLORS.textDim, fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' },
 });

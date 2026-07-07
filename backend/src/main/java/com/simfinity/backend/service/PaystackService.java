@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.simfinity.backend.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -11,10 +14,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 @Service
 public class PaystackService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaystackService.class);
 
     @Value("${paystack.secret.key:}")
     private String paystackSecretKey;
@@ -22,7 +26,6 @@ public class PaystackService {
     private final RestTemplate restTemplate;
     private final ZenditService zenditService;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Random random = new Random();
 
     public PaystackService(RestTemplate restTemplate, ZenditService zenditService) {
         this.restTemplate = restTemplate;
@@ -31,15 +34,7 @@ public class PaystackService {
 
     public Map<String, Object> initializeTransaction(String email, double amountGhs, String planId) {
         if (paystackSecretKey == null || paystackSecretKey.isBlank()) {
-            // Simulated gateway fallback
-            String simRef = "sim_" + randomAlphaNum(9).toUpperCase();
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("authorization_url", "https://checkout.paystack.com/mock-gateway?ref=" + simRef);
-            result.put("reference", simRef);
-            result.put("isSimulated", true);
-            result.put("message", "Paystack simulated gateway initialized successfully (Failover active)");
-            return result;
+            return simulatedGateway();
         }
 
         try {
@@ -48,6 +43,7 @@ public class PaystackService {
             ObjectNode body = mapper.createObjectNode();
             body.put("email", email);
             body.put("amount", amountInKobo);
+            body.put("callback_url", "simfinity://payment-complete");
 
             ObjectNode metadata = mapper.createObjectNode();
             metadata.put("planId", planId);
@@ -82,22 +78,46 @@ public class PaystackService {
             return result;
 
         } catch (Exception e) {
-            System.out.println("[Paystack Gateway Info] Sandbox offline or unreachable. Falling back. Details: " + e.getMessage());
-            String simRef = "sim_" + randomAlphaNum(9).toUpperCase();
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("authorization_url", "https://checkout.paystack.com/mock-gateway?ref=" + simRef);
-            result.put("reference", simRef);
-            result.put("isSimulated", true);
-            result.put("message", "Paystack simulated gateway initialized successfully (Failover active)");
-            return result;
+            log.warn("[Paystack] Sandbox offline or unreachable, falling back: {}", e.getMessage());
+            return simulatedGateway();
         }
     }
 
-    public Map<String, Object> verifyTransaction(String reference, String planId, String email, int dataGb) {
+    public Map<String, Object> verifyPaymentOnly(String reference) {
+        // sim_ references are only valid in development (when no live Paystack key is configured)
+        if (reference.startsWith("sim_")) {
+            if (paystackSecretKey != null && !paystackSecretKey.isBlank()) {
+                log.warn("[Paystack] Rejected sim_ reference {} — live key is configured", reference);
+                return Map.of("error", "Invalid payment reference.");
+            }
+            return Map.of("success", true, "reference", reference);
+        }
+        if (paystackSecretKey != null && !paystackSecretKey.isBlank()) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(paystackSecretKey);
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    "https://api.paystack.co/transaction/verify/" + reference,
+                    HttpMethod.GET, entity, JsonNode.class);
+                JsonNode body = response.getBody();
+                if (response.getStatusCode().is2xxSuccessful() && body != null
+                        && body.path("status").asBoolean()
+                        && "success".equals(body.path("data").path("status").asText())) {
+                    return Map.of("success", true, "reference", reference);
+                }
+            } catch (Exception e) {
+                log.warn("[Paystack] Verify error: {}", e.getMessage());
+            }
+            return Map.of("error", "Payment verification failed or pending.");
+        }
+        return Map.of("error", "Payment verification failed or pending.");
+    }
+
+    public Map<String, Object> verifyTransaction(String reference, String planId) {
         boolean paymentSuccessful = false;
 
-        if (reference.startsWith("sim_")) {
+        if (reference.startsWith("sim_") && (paystackSecretKey == null || paystackSecretKey.isBlank())) {
             paymentSuccessful = true;
         } else if (paystackSecretKey != null && !paystackSecretKey.isBlank()) {
             try {
@@ -116,14 +136,12 @@ public class PaystackService {
                     paymentSuccessful = true;
                 }
             } catch (Exception e) {
-                System.out.println("[Paystack Verify Error] " + e.getMessage());
+                log.warn("[Paystack] Verify error: {}", e.getMessage());
             }
         }
 
         if (!paymentSuccessful) {
-            Map<String, Object> err = new HashMap<>();
-            err.put("error", "Payment verification failed or pending.");
-            return err;
+            return Map.of("error", "Payment verification failed or pending.");
         }
 
         Map<String, Object> esimProfile = zenditService.provisionEsim(reference, planId);
@@ -136,12 +154,14 @@ public class PaystackService {
         return result;
     }
 
-    private String randomAlphaNum(int len) {
-        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < len; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
+    private Map<String, Object> simulatedGateway() {
+        String simRef = "sim_" + StringUtils.randomAlphaNum(9).toUpperCase();
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("authorization_url", "https://checkout.paystack.com/mock-gateway?ref=" + simRef);
+        result.put("reference", simRef);
+        result.put("isSimulated", true);
+        result.put("message", "Paystack simulated gateway initialized successfully (Failover active)");
+        return result;
     }
 }
