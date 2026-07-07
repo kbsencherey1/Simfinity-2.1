@@ -134,7 +134,7 @@ export default function HomeScreen() {
           <View style={styles.insightHeaderRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.sectionTitle}>Global Heritage Spotlights</Text>
-              <Text style={styles.sectionSub}>Real-time travel trivia powered by Gemini AI.</Text>
+              <Text style={styles.sectionSub}>Real-time travel trivia from around the world.</Text>
             </View>
             <Pressable
               onPress={fetchRandom}
