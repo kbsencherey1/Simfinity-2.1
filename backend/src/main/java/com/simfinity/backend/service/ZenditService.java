@@ -3,22 +3,37 @@ package com.simfinity.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.simfinity.backend.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.annotation.PostConstruct;
+
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ZenditService {
+
+    private static final Logger log = LoggerFactory.getLogger(ZenditService.class);
 
     @Value("${zendit.api.key:sand_39f37bfb-25f7-4de4-9564-024003cde0d46a2b28a84063e9f8a9c79227}")
     private String zenditApiKey;
 
     private final RestTemplate restTemplate;
+    private final ExchangeRateService exchangeRateService;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Random random = new Random();
+
+    private static final long CACHE_TTL_MS = 15 * 60 * 1000L;
+
+    private static final List<String> PREWARM_COUNTRIES = List.of("GH", "US", "GB", "NG", "ZA");
+    private record CachedOffers(Map<String, Object> data, long cachedAt) {}
+    private final ConcurrentHashMap<String, CachedOffers> offersCache = new ConcurrentHashMap<>();
 
     private static final Map<String, String> PLAN_ZENDIT_OFFER_MAP = Map.of(
         "oseikrom_daily", "ESIM-GH-1D-ULE-NOROAM",
@@ -26,7 +41,6 @@ public class ZenditService {
         "gold_coast_monthly", "ESIM-GH-30D-50GB-NOROAM"
     );
 
-    // Country fallback data for when Zendit has no offers
     private static final Map<String, Map<String, Object>> COUNTRY_DATA = new LinkedHashMap<>();
 
     static {
@@ -54,15 +68,32 @@ public class ZenditService {
         return m;
     }
 
-    public ZenditService(RestTemplate restTemplate) {
+    public ZenditService(RestTemplate restTemplate, ExchangeRateService exchangeRateService) {
         this.restTemplate = restTemplate;
+        this.exchangeRateService = exchangeRateService;
+    }
+
+    @PostConstruct
+    void prewarmCache() {
+        Thread.ofVirtual().start(() -> {
+            for (String country : PREWARM_COUNTRIES) {
+                try { getOffers(country); } catch (Exception ignored) {}
+            }
+            log.info("[Zendit] Cache pre-warmed for {}", PREWARM_COUNTRIES);
+        });
+    }
+
+    /** Convert a USD price to GHS using the live exchange rate. */
+    private double usdToGhs(double priceUsd) {
+        double usdPerGhs = exchangeRateService.getRates().getOrDefault("USD", 0.065);
+        return Math.round((priceUsd / usdPerGhs) * 100.0) / 100.0;
     }
 
     public Map<String, Object> provisionEsim(String reference, String planId) {
         String offerId = planId.startsWith("ESIM-") ? planId
             : PLAN_ZENDIT_OFFER_MAP.getOrDefault(planId, "ESIM-GH-30D-5GB-NOROAM");
 
-        System.out.println("[Zendit Provisioning] Purchasing Offer: " + offerId + " for transaction: " + reference);
+        log.info("[Zendit] Purchasing offer: {} for transaction: {}", offerId, reference);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -79,10 +110,9 @@ public class ZenditService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode zenditData = response.getBody();
-                // Poll if still pending
                 int attempts = 0;
                 while (attempts < 5 && isStillPending(zenditData)) {
-                    System.out.println("[Zendit Polling] Status: " + zenditData.path("status").asText() + ", attempt " + (attempts + 1));
+                    log.info("[Zendit] Status: {}, attempt {}", zenditData.path("status").asText(), attempts + 1);
                     Thread.sleep(1500);
                     attempts++;
                     HttpEntity<Void> getEntity = new HttpEntity<>(headers);
@@ -105,16 +135,101 @@ public class ZenditService {
                     result.put("activationCode", activation);
                     result.put("smdpAddress", smdp);
                     result.put("isRealEsim", true);
-                    System.out.println("[Zendit Success] iccid=" + iccid);
+                    log.info("[Zendit] Success, iccid={}", iccid);
                     return result;
                 }
-                System.out.println("[Zendit No Confirmation] status=" + zenditData.path("status").asText());
+                log.warn("[Zendit] No confirmation, status={}", zenditData.path("status").asText());
             }
         } catch (Exception e) {
-            System.out.println("[eSIM Provisioning Info] Zendit error or offline. Falling back. Details: " + e.getMessage());
+            log.warn("[Zendit] Provision error, falling back: {}", e.getMessage());
         }
 
         return mockEsimProfile();
+    }
+
+    public Map<String, Object> getEsimUsage(String transactionId, String dataGb) {
+        boolean unlimited = dataGb != null && dataGb.toLowerCase().contains("unlimited");
+        double total = unlimited ? 50.0 : parseGb(dataGb);
+
+        if (transactionId != null && !transactionId.isBlank()) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(zenditApiKey);
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+                ResponseEntity<JsonNode> resp = restTemplate.exchange(
+                    "https://api.zendit.io/v1/esim/purchases/" + transactionId,
+                    HttpMethod.GET, entity, JsonNode.class);
+
+                if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                    JsonNode data = resp.getBody();
+                    double balanceBytes = data.path("dataBalance").asDouble(-1);
+                    double totalGb = data.path("dataGB").asDouble(0);
+
+                    if (balanceBytes >= 0 && totalGb > 0) {
+                        double remainingGb = Math.round(balanceBytes / (1024.0 * 1024 * 1024) * 100) / 100.0;
+                        double usedGb = Math.max(0, Math.round((totalGb - remainingGb) * 100) / 100.0);
+                        double usedPct = Math.min(100, Math.round((usedGb / totalGb) * 1000) / 10.0);
+                        return Map.of(
+                            "totalGb", totalGb,
+                            "usedGb", usedGb,
+                            "remainingGb", remainingGb,
+                            "usedPercent", usedPct,
+                            "unlimited", false,
+                            "source", "live"
+                        );
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("[Zendit] Usage lookup failed for {}: {}", transactionId, e.getMessage());
+            }
+        }
+
+        return Map.of(
+            "totalGb", total,
+            "usedGb", 0.0,
+            "remainingGb", total,
+            "usedPercent", 0.0,
+            "unlimited", unlimited,
+            "source", "stored"
+        );
+    }
+
+    public Map<String, Object> topUpEsim(String iccid, String reference, String planId) {
+        String offerId = planId.startsWith("ESIM-") ? planId
+            : PLAN_ZENDIT_OFFER_MAP.getOrDefault(planId, "ESIM-GH-30D-5GB-NOROAM");
+
+        log.info("[Zendit] Top-up for iccid={} offer={}", iccid, offerId);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(zenditApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            ObjectNode body = mapper.createObjectNode();
+            body.put("offerId", offerId);
+            body.put("transactionId", reference);
+            HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(body), headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                "https://api.zendit.io/v1/esim/" + iccid + "/topups", entity, JsonNode.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("[Zendit] Top-up successful for iccid={}", iccid);
+                return Map.of("iccid", iccid, "isTopUp", true, "isRealEsim", true);
+            }
+        } catch (Exception e) {
+            log.warn("[Zendit] Top-up error (sandbox may not support it): {}", e.getMessage());
+        }
+
+        // Sandbox fallback: acknowledge top-up succeeded with the existing ICCID
+        return Map.of("iccid", iccid, "isTopUp", true, "isRealEsim", false);
+    }
+
+    private double parseGb(String dataGb) {
+        if (dataGb == null) return 0;
+        try { return Double.parseDouble(dataGb.replaceAll("[^\\d.]", "")); }
+        catch (Exception e) { return 0; }
     }
 
     public Map<String, Object> listEsims() {
@@ -146,7 +261,7 @@ public class ZenditService {
                     String iccid = p.path("confirmation").path("iccid").asText(
                         "89233010" + (100000000000L + (long)(random.nextDouble() * 900000000000L)));
                     String txId = p.path("transactionId").asText("");
-                    String id = txId.isBlank() ? "#GH-2026-" + randomAlphaNum(3).toUpperCase() : "#" + txId;
+                    String id = txId.isBlank() ? "#GH-2026-" + StringUtils.randomAlphaNum(3).toUpperCase() : "#" + txId;
                     String status = List.of("DONE", "ACCEPTED", "IN_PROGRESS").contains(p.path("status").asText(""))
                         ? "active" : "completed";
 
@@ -173,12 +288,19 @@ public class ZenditService {
             }
             return Map.of("success", true, "esims", esims);
         } catch (Exception e) {
-            System.out.println("[Zendit list eSIMs failed] " + e.getMessage());
+            log.warn("[Zendit] List eSIMs failed: {}", e.getMessage());
             return Map.of("success", false, "esims", List.of());
         }
     }
 
     public Map<String, Object> getOffers(String country) {
+        String key = country.toUpperCase();
+        CachedOffers cached = offersCache.get(key);
+        if (cached != null && (System.currentTimeMillis() - cached.cachedAt()) < CACHE_TTL_MS) {
+            log.info("[Zendit] Cache hit for country={}", key);
+            return cached.data();
+        }
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(zenditApiKey);
@@ -214,9 +336,11 @@ public class ZenditService {
                         else if (days == 30) name = "Gold Coast Monthly (" + dataStr + ")";
                         else name = "Ghana Explorer " + days + "D (" + dataStr + ")";
                     } else {
-                        JsonNode regions = o.path("regions");
-                        String region = regions.isArray() && regions.size() > 0 ? regions.get(0).asText(country) : country;
-                        name = region + " Day Pass (" + dataStr + ")";
+                        Map<String, Object> countryMeta = COUNTRY_DATA.get(key);
+                        String displayName = countryMeta != null
+                            ? (String) countryMeta.get("countryName")
+                            : key;
+                        name = displayName + " Day Pass (" + dataStr + ")";
                     }
 
                     String tag = isUnlimited ? "Unlimited Value"
@@ -226,11 +350,13 @@ public class ZenditService {
                         : "Standard Pack";
 
                     JsonNode priceNode = o.path("price");
-                    double priceUsd = priceNode.path("fixed").asDouble(500) / priceNode.path("currencyDivisor").asDouble(100);
+                    double currencyDivisor = priceNode.path("currencyDivisor").asDouble(100);
+                    double priceUsd = currencyDivisor > 0
+                        ? priceNode.path("fixed").asDouble(500) / currencyDivisor
+                        : priceNode.path("fixed").asDouble(500) / 100.0;
                     priceUsd = Math.round(priceUsd * 100.0) / 100.0;
-                    int priceGhs = (int) Math.round(priceUsd * 13.5);
+                    double priceGhs = usdToGhs(priceUsd);
 
-                    // Cultural insight based on offer ID hash
                     String offerId = o.path("offerId").asText("x");
                     int hashIdx = offerId.chars().sum();
                     String[][] insights = {
@@ -262,14 +388,17 @@ public class ZenditService {
                 }
             }
 
-            if (plans.isEmpty()) {
-                return Map.of("success", true, "plans", generateFallbackPlans(country));
-            }
-            return Map.of("success", true, "plans", plans);
+            Map<String, Object> result = plans.isEmpty()
+                ? Map.of("success", true, "plans", generateFallbackPlans(country))
+                : Map.of("success", true, "plans", plans);
+            offersCache.put(key, new CachedOffers(result, System.currentTimeMillis()));
+            return result;
 
         } catch (Exception e) {
-            System.out.println("[Zendit get offers failed] " + e.getMessage());
-            return Map.of("success", true, "plans", generateFallbackPlans(country));
+            log.warn("[Zendit] Get offers failed: {}", e.getMessage());
+            Map<String, Object> fallback = Map.of("success", true, "plans", generateFallbackPlans(country));
+            offersCache.put(key, new CachedOffers(fallback, System.currentTimeMillis()));
+            return fallback;
         }
     }
 
@@ -297,7 +426,7 @@ public class ZenditService {
         plan.put("id", "ESIM-" + country.toUpperCase() + "-" + suffix);
         plan.put("name", name);
         plan.put("tag", tag);
-        plan.put("priceGhs", (int) Math.round(priceUsd * 13.5));
+        plan.put("priceGhs", usdToGhs(priceUsd));
         plan.put("priceUsd", priceUsd);
         plan.put("speed", picked.get("speed"));
         plan.put("dataGb", dataGb);
@@ -330,12 +459,5 @@ public class ZenditService {
         List<String> parts = new ArrayList<>();
         for (JsonNode n : arrayNode) parts.add(n.asText());
         return String.join(sep, parts);
-    }
-
-    private String randomAlphaNum(int len) {
-        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < len; i++) sb.append(chars.charAt(random.nextInt(chars.length())));
-        return sb.toString();
     }
 }

@@ -100,6 +100,52 @@ export const HERITAGE_IMAGES = {
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAU1cpKgrM_IBuaqSw6sxmPkWXAc9ur2sG7fn2mRwTdMkTl-pDEcOcRrrZijHGqVnOi9dyHj9PVYpyNqg1KMxfnCLtAhptaScJ4uMpIi_ndsYviSgf1QdvfcH0sEpXD4fQJ8tCGQ3ZTy_jYaDOm95vvp0Y37836A0S_P-pKbAlqUmmEVpeB8kBq0_LWGqXjKUVYI9LE5mx-A9-qYNjf3bV9VWcCNFD-GNVUugJpV2k0EJLHc9JaLav3RIrNmi0tvDLDElMfTi8pgw',
 };
 
+export interface TouristSpot {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  imageUrl: string;
+}
+
+export const TOURIST_SPOTS: TouristSpot[] = [
+  {
+    id: 'kakum',
+    name: 'Kakum Canopy Walkway',
+    location: 'Central Region, Ghana',
+    description: 'A spectacular perspective of the dense tropical rainforest, suspended 30 meters high across seven suspension bridges.',
+    imageUrl: 'https://images.unsplash.com/photo-1548625361-155deee21623?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 'cape_coast',
+    name: 'Cape Coast Castle Coastline',
+    location: 'Central Region, Ghana',
+    description: 'A world heritage site of immense historical significance, looking over pristine Atlantic waves crashing on the coast.',
+    imageUrl: 'https://images.unsplash.com/photo-1591389703635-e15a07b842d7?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 'mole',
+    name: 'Mole National Park',
+    location: 'Savannah Region, Ghana',
+    description: "Ghana's premier savanna wildlife refuge, sheltering majestic African elephants, rare antelopes, and local primates.",
+    imageUrl: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 'wli',
+    name: 'Wli Waterfalls',
+    location: 'Volta Region, Ghana',
+    description: 'The highest cascading waterfall in West Africa, flowing with majestic purity deep inside a lush mountain sanctuary.',
+    imageUrl: 'https://images.unsplash.com/photo-1432406186267-3c72dee6e491?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 'elmina',
+    name: 'Elmina Fishing Harbor & Castle',
+    location: 'Central Region, Ghana',
+    description: 'A vibrant harbor loaded with beautifully carved canoes, adjacent to one of the earliest transatlantic stone structures.',
+    imageUrl: 'https://images.unsplash.com/photo-1590001155093-a3c66ab0c3ff?auto=format&fit=crop&w=1600&q=80',
+  },
+];
+
 export const POPULAR_COUNTRIES = [
   { code: 'GH', name: 'Ghana', flag: '🇬🇭', continent: 'Africa' },
   { code: 'US', name: 'United States', flag: '🇺🇸', continent: 'North America' },

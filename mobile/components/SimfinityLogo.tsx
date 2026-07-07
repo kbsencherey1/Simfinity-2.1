@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { COLORS } from './styles';
 
 interface Props {
@@ -7,18 +7,12 @@ interface Props {
   showText?: boolean;
 }
 
-export function SimfinityLogo({ size = 60, showText = false }: Props) {
-  const ringSize = size;
-  const innerSize = size * 0.55;
-  const dotSize = size * 0.14;
+const logoAsset = require('../assets/icon.png');
 
+export function SimfinityLogo({ size = 80, showText = false }: Props) {
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.outerRing, { width: ringSize, height: ringSize, borderRadius: ringSize / 2 }]}>
-        <View style={[styles.innerCircle, { width: innerSize, height: innerSize, borderRadius: innerSize / 2 }]}>
-          <View style={[styles.dot, { width: dotSize, height: dotSize, borderRadius: dotSize / 2 }]} />
-        </View>
-      </View>
+      <Image source={logoAsset} style={{ width: size, height: size }} resizeMode="contain" />
       {showText && (
         <Text style={styles.brandText}>SIMFINITY</Text>
       )}
@@ -26,12 +20,10 @@ export function SimfinityLogo({ size = 60, showText = false }: Props) {
   );
 }
 
-export function SimfinityNavbarLogo({ size = 28 }: { size?: number }) {
+export function SimfinityNavbarLogo({ size = 32 }: { size?: number }) {
   return (
     <View style={styles.navRow}>
-      <View style={[styles.navRing, { width: size, height: size, borderRadius: size / 2 }]}>
-        <View style={[styles.navInner, { width: size * 0.55, height: size * 0.55, borderRadius: size * 0.275 }]} />
-      </View>
+      <Image source={logoAsset} style={{ width: size, height: size }} resizeMode="contain" />
       <Text style={styles.navBrand}>SIMFINITY</Text>
     </View>
   );
@@ -41,20 +33,6 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     gap: 8,
-  },
-  outerRing: {
-    borderWidth: 3,
-    borderColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  innerCircle: {
-    backgroundColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dot: {
-    backgroundColor: COLORS.surface,
   },
   brandText: {
     color: COLORS.gold,
@@ -66,15 +44,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  navRing: {
-    borderWidth: 2,
-    borderColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navInner: {
-    backgroundColor: COLORS.gold,
   },
   navBrand: {
     color: COLORS.gold,

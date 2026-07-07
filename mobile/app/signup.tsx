@@ -4,25 +4,54 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass, kenteDivider } from '../components/styles';
 import { useApp } from '../context/AppContext';
+import { API_BASE } from '../config';
 
 export default function SignUpScreen() {
-  const { setIsLoggedIn } = useApp();
-  const [name, setName] = useState('Kwame Mensah');
-  const [email, setEmail] = useState('kwame@example.com');
-  const [password, setPassword] = useState('password123');
+  const { loginWithToken } = useApp();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRegister = () => {
-    setIsLoggedIn(true);
-    router.replace('/(tabs)');
+  const handleRegister = async () => {
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms of Service to continue.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName: name, referredByCode: referralCode.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await loginWithToken(data.token, data.email, data.fullName, data.userId);
+        router.replace({ pathname: '/verify-email', params: { email: data.email } });
+      } else {
+        setError(data.error || 'Registration failed. Please try again.');
+      }
+    } catch {
+      setError('Network error. Make sure the server is running.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,9 +65,12 @@ export default function SignUpScreen() {
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Pressable
+              style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
+              onPress={() => router.back()}
+            >
               <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={styles.header}>
               <Text style={styles.heading}>Create Account</Text>
@@ -49,7 +81,9 @@ export default function SignUpScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>FULL NAME</Text>
                 <View style={glass.input}>
-                  <Text style={styles.inputIcon}>👤 </Text>
+                  <View style={styles.inputIconBox}>
+                    <Text style={styles.inputIconText}>N</Text>
+                  </View>
                   <TextInput
                     style={styles.inputText}
                     value={name}
@@ -63,7 +97,9 @@ export default function SignUpScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>EMAIL ADDRESS</Text>
                 <View style={glass.input}>
-                  <Text style={styles.inputIcon}>✉ </Text>
+                  <View style={styles.inputIconBox}>
+                    <Text style={styles.inputIconText}>@</Text>
+                  </View>
                   <TextInput
                     style={styles.inputText}
                     value={email}
@@ -79,29 +115,76 @@ export default function SignUpScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>PASSWORD</Text>
                 <View style={glass.input}>
-                  <Text style={styles.inputIcon}>🔒 </Text>
+                  <View style={styles.inputIconBox}>
+                    <Text style={styles.inputIconText}>••</Text>
+                  </View>
                   <TextInput
-                    style={styles.inputText}
+                    style={[styles.inputText, { flex: 1 }]}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     placeholderTextColor={COLORS.textDim}
                     placeholder="••••••••"
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={({ pressed }) => [styles.showHideBtn, pressed && { opacity: 0.6 }]}
+                  >
+                    <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>REFERRAL CODE (OPTIONAL)</Text>
+                <View style={glass.input}>
+                  <View style={styles.inputIconBox}>
+                    <Text style={styles.inputIconText}>R</Text>
+                  </View>
+                  <TextInput
+                    style={styles.inputText}
+                    value={referralCode}
+                    onChangeText={setReferralCode}
+                    autoCapitalize="characters"
+                    placeholderTextColor={COLORS.textDim}
+                    placeholder="SIM-XXXX-XXXX"
                   />
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} activeOpacity={0.85}>
-                <Text style={styles.primaryBtnText}>Register & Connect ✓</Text>
-              </TouchableOpacity>
+              {/* T&C checkbox */}
+              <Pressable
+                style={styles.termsRow}
+                onPress={() => setAgreedToTerms(!agreedToTerms)}
+              >
+                <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                  {agreedToTerms && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.termsText}>
+                  I agree to the{' '}
+                  <Text style={styles.termsLink}>Terms of Service</Text>
+                  {' '}and{' '}
+                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                </Text>
+              </Pressable>
+
+              {error && <Text style={styles.errorText}>{error}</Text>}
+
+              <Pressable
+                style={({ pressed }) => [styles.primaryBtn, loading && { opacity: 0.6 }, pressed && styles.primaryBtnPressed]}
+                onPress={handleRegister}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryBtnText}>Register & Connect</Text>}
+              </Pressable>
 
               <View style={kenteDivider.line} />
 
               <View style={styles.switchRow}>
                 <Text style={styles.switchText}>Already have an account? </Text>
-                <TouchableOpacity onPress={() => router.replace('/login')}>
+                <Pressable onPress={() => router.replace('/login')}>
                   <Text style={styles.switchLink}>Log In</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           </ScrollView>
@@ -132,11 +215,39 @@ const styles = StyleSheet.create({
   card: { padding: 24, gap: 16 },
   field: { gap: 6 },
   label: { color: COLORS.textDim, fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  inputIcon: { fontSize: 16, color: COLORS.textDim, marginRight: 4 },
+  inputIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  inputIconText: { color: COLORS.textDim, fontSize: 12, fontWeight: '700' },
   inputText: { color: '#fff', fontSize: 14, flex: 1 },
+  showHideBtn: { paddingHorizontal: 8, paddingVertical: 4 },
+  showHideText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 4 },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.4)',
+    backgroundColor: 'rgba(255,215,0,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: 2,
+  },
+  checkboxChecked: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+  checkmark: { color: '#000', fontSize: 11, fontWeight: '900' },
+  termsText: { color: COLORS.textMuted, fontSize: 12, flex: 1, lineHeight: 18 },
+  termsLink: { color: COLORS.gold, fontWeight: '700' },
   primaryBtn: { backgroundColor: COLORS.gold, paddingVertical: 15, borderRadius: 10, alignItems: 'center' },
+  primaryBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.97 }] },
   primaryBtnText: { color: '#000', fontWeight: '800', fontSize: 15 },
   switchRow: { flexDirection: 'row', justifyContent: 'center' },
   switchText: { color: COLORS.textMuted, fontSize: 13 },
   switchLink: { color: COLORS.gold, fontWeight: '700', fontSize: 13 },
+  errorText: { color: '#cc4e3c', fontSize: 12, textAlign: 'center' },
 });

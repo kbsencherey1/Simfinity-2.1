@@ -4,32 +4,20 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
+  Pressable,
   TextInput,
+  Image,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TouristBackground } from '../../components/TouristBackground';
+import { SkeletonBox } from '../../components/Skeleton';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
-import { useApp } from '../../context/AppContext';
-import { INITIAL_PLANS } from '../../data';
-import { ESimPlan } from '../../types';
-
-const API_BASE = '';
-
-interface GlobalHub {
-  id: string;
-  name: string;
-  location: string;
-  coverage: string;
-  latency: string;
-  speed: string;
-  insight: string;
-  symbol: string;
-  localWisdomTitle: string;
-  localWisdomMeaning: string;
-  countryCode: string;
-}
+import { useApp, formatCurrencyPrice } from '../../context/AppContext';
+import { INITIAL_PLANS, TOURIST_SPOTS } from '../../data';
+import { ESimPlan, GlobalHub } from '../../types';
+import { API_BASE } from '../../config';
 
 const GLOBAL_HUBS: GlobalHub[] = [
   {
@@ -40,7 +28,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
     latency: '11ms',
     speed: '450 Mbps',
     insight: 'The Black Star Gate in Accra symbolises sovereignty and direct backhaul access. High frequency nodes cover the vibrant tech centers and coastal markets of West Africa.',
-    symbol: '♾',
+    symbol: 'GH',
     localWisdomTitle: 'Adinkra: Mpatapo',
     localWisdomMeaning: 'The knot of reconciliation and unbreakable global communication.',
     countryCode: 'GH',
@@ -53,7 +41,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
     latency: '8ms',
     speed: '820 Mbps',
     insight: 'Connecting through NYC Hub offers blazing fast routing to transatlantic cables. Perfect coverage spanning high-density downtown blocks, subways, and airport avenues.',
-    symbol: '🔗',
+    symbol: 'US',
     localWisdomTitle: 'Smart Grid Connect',
     localWisdomMeaning: 'Transoceanic laser synchronization for ultra-redundancy.',
     countryCode: 'US',
@@ -66,7 +54,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
     latency: '7ms',
     speed: '710 Mbps',
     insight: 'Anchored at the prime meridian, London routing provides double-redundant low-latency cellular handoffs across the UK and continental Europe.',
-    symbol: '🌐',
+    symbol: 'GB',
     localWisdomTitle: 'Meridian Precision',
     localWisdomMeaning: 'Zero-meridian alignment for ultra-synchronized global packets.',
     countryCode: 'GB',
@@ -79,7 +67,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
     latency: '5ms',
     speed: '950 Mbps',
     insight: 'Superheated millimeter-wave cells handle immense density. Optimal coverage inside high-speed Shinkansen trains and underground hyper-hubs.',
-    symbol: '⚡',
+    symbol: 'JP',
     localWisdomTitle: 'Zen Flow Routing',
     localWisdomMeaning: 'Balanced state transition: seamless zero-drop handovers between antennas.',
     countryCode: 'JP',
@@ -92,7 +80,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
     latency: '16ms',
     speed: '510 Mbps',
     insight: 'Overlooking two oceans, the Table Mountain relay connects major southern submarine cables, providing beautiful, strong coastline cellular reception.',
-    symbol: '⛵',
+    symbol: 'ZA',
     localWisdomTitle: 'Ubuntu Network',
     localWisdomMeaning: '"I am because we are" — a distributed, community-first mesh infrastructure.',
     countryCode: 'ZA',
@@ -100,35 +88,56 @@ const GLOBAL_HUBS: GlobalHub[] = [
 ];
 
 const POPULAR_COUNTRIES = [
-  { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'JP', name: 'Japan', flag: '🇯🇵' },
-  { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
-  { code: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: 'NG', name: 'Nigeria', flag: '🇳🇬' },
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'SG', name: 'Singapore', flag: '🇸🇬' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
-  { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+  { code: 'GH', name: 'Ghana' },
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' },
+  { code: 'NG', name: 'Nigeria' },
+  { code: 'IN', name: 'India' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'MX', name: 'Mexico' },
 ];
 
 export default function PlansScreen() {
-  const { setCheckoutPlan } = useApp();
+  const { setCheckoutPlan, currency, exchangeRates, topUpEsim, setTopUpEsim } = useApp();
   const [plans, setPlans] = useState<ESimPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState('GH');
   const [searchTerm, setSearchTerm] = useState('');
-  const [currency, setCurrency] = useState<'USD' | 'GHS'>('USD');
   const [sortOrder, setSortOrder] = useState<'low' | 'high'>('low');
 
-  const activeHub = GLOBAL_HUBS.find(h => h.countryCode === selectedCountry) || GLOBAL_HUBS[0];
+  // When entering top-up mode, auto-select the country from the eSIM's planId
+  useEffect(() => {
+    if (!topUpEsim?.planId) return;
+    const codes = POPULAR_COUNTRIES.map(c => c.code);
+    const match = topUpEsim.planId.match(new RegExp(`-(${codes.join('|')})-`));
+    if (match) setSelectedCountry(match[1]);
+  }, [topUpEsim]);
 
   const fetchPlans = async (code: string) => {
-    setIsLoading(true);
+    // 1. Serve cached plans immediately — no loading spinner for returning users
+    const cacheKey = `plans_cache_${code}`;
+    try {
+      const raw = await AsyncStorage.getItem(cacheKey);
+      if (raw) {
+        const { plans: cached, ts } = JSON.parse(raw);
+        const AGE_MS = Date.now() - ts;
+        if (cached?.length > 0) {
+          setPlans(cached);
+          setIsLoading(false);
+          // If cache is under 15 min old, skip the network fetch entirely
+          if (AGE_MS < 15 * 60 * 1000) return;
+        }
+      }
+    } catch {}
+
+    // 2. Fetch fresh data — silently if we already showed cached plans
     try {
       const res = await fetch(`${API_BASE}/api/zendit/offers?country=${code}`);
       if (res.ok) {
@@ -136,12 +145,17 @@ export default function PlansScreen() {
         if (data.success && data.plans?.length > 0) {
           setPlans(data.plans);
           setIsLoading(false);
+          AsyncStorage.setItem(cacheKey, JSON.stringify({ plans: data.plans, ts: Date.now() }));
           return;
         }
       }
     } catch {}
-    setPlans(INITIAL_PLANS);
-    setIsLoading(false);
+
+    // 3. Final fallback
+    if (plans.length === 0) {
+      setPlans(INITIAL_PLANS);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => { fetchPlans(selectedCountry); }, [selectedCountry]);
@@ -152,104 +166,86 @@ export default function PlansScreen() {
     p.speed.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const sortRate = currency === 'GHS' ? 1 : (exchangeRates[currency] ?? 1);
   filtered = [...filtered].sort((a, b) => {
-    const pA = currency === 'GHS' ? a.priceGhs : a.priceUsd;
-    const pB = currency === 'GHS' ? b.priceGhs : b.priceUsd;
+    const pA = a.priceGhs * sortRate;
+    const pB = b.priceGhs * sortRate;
     return sortOrder === 'low' ? pA - pB : pB - pA;
   });
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.headerBadgeRow}>
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>Multipath Network</Text>
-            </View>
-            <Text style={styles.headerHubLabel}>Active Hub: {activeHub.location}</Text>
-          </View>
-          <Text style={styles.headerTitle}>Simfinity Global Exploratorium</Text>
-          <Text style={styles.headerSub}>190+ countries · Infinite fiber backhauls · Authentic local insights</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.refreshBtn, isLoading && { opacity: 0.5 }]}
-          onPress={() => fetchPlans(selectedCountry)}
-          disabled={isLoading}
-        >
-          <Text style={[styles.refreshIcon, isLoading && { opacity: 0.5 }]}>↻</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      <TouristBackground />
+      <SafeAreaView edges={['top']} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
 
-        {/* Global Fiber-Terminal Gateway Card */}
-        <View style={[glass.panel, styles.hubCard]}>
-          <View style={styles.hubCardHeader}>
-            <View>
-              <Text style={styles.hubCardTitle}>🔗 Global Fiber-Terminal Gateway</Text>
-              <Text style={styles.hubCardSub}>
-                View current server-synchronized backhauls, network protocol specifications.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.hubInfo}>
-            <View style={styles.hubNameRow}>
-              <Text style={styles.hubLocation}>📍 {activeHub.location}</Text>
-              <Text style={styles.hubName}>{activeHub.name}</Text>
-            </View>
-
-            <View style={styles.hubTable}>
-              <View style={styles.hubRow}>
-                <Text style={styles.hubRowLabel}>Uplink Status:</Text>
-                <Text style={[styles.hubRowValue, { color: '#94ecb4' }]}>● SYNCHRONIZED</Text>
-              </View>
-              <View style={styles.hubRow}>
-                <Text style={styles.hubRowLabel}>Direct Latency:</Text>
-                <Text style={[styles.hubRowValue, { color: COLORS.gold }]}>{activeHub.latency}</Text>
-              </View>
-              <View style={styles.hubRow}>
-                <Text style={styles.hubRowLabel}>Downlink Carrier:</Text>
-                <Text style={styles.hubRowValue}>{activeHub.speed}</Text>
-              </View>
-              <View style={styles.hubRow}>
-                <Text style={styles.hubRowLabel}>Network Protocol:</Text>
-                <Text style={[styles.hubRowValue, { flex: 1, textAlign: 'right', flexWrap: 'wrap' }]}>{activeHub.coverage}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.hubInsight}>{activeHub.insight}</Text>
-
-            <View style={styles.wisdomRow}>
-              <Text style={styles.wisdomSymbol}>{activeHub.symbol}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.wisdomTitle}>{activeHub.localWisdomTitle}</Text>
-                <Text style={styles.wisdomMeaning}>{activeHub.localWisdomMeaning}</Text>
-              </View>
-            </View>
-          </View>
+        {/* Ghana Heritage Sites */}
+        <View style={styles.heritageSectionHeader}>
+          <Text style={styles.heritageSectionTitle}>Ghana Heritage Destinations</Text>
+          <Text style={styles.heritageSectionSub}>eSIM plans for these beautiful sites</Text>
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.heritageScroll}>
+          {TOURIST_SPOTS.map(spot => (
+            <Pressable
+              key={spot.id}
+              style={({ pressed }) => [styles.heritageCard, pressed && { opacity: 0.85 }]}
+              onPress={() => setSelectedCountry('GH')}
+            >
+              <Image source={{ uri: spot.imageUrl }} style={styles.heritageCardImg} resizeMode="cover" />
+              <View style={styles.heritageCardOverlay} />
+              <View style={styles.heritageCardContent}>
+                <Text style={styles.heritageCardTag}>GHANA LANDMARK</Text>
+                <Text style={styles.heritageCardName} numberOfLines={2}>{spot.name}</Text>
+                <Text style={styles.heritageCardLoc} numberOfLines={1}>{spot.location}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Top-up mode banner */}
+        {topUpEsim && (
+          <View style={styles.topUpBanner}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.topUpBannerLabel}>ADDING DATA TO</Text>
+              <Text style={styles.topUpBannerPlan} numberOfLines={1}>{topUpEsim.planName}</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.topUpBannerClose, pressed && { opacity: 0.6 }]}
+              onPress={() => setTopUpEsim(null)}
+            >
+              <Text style={styles.topUpBannerCloseText}>×</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Country Chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.countryScroll}>
           {POPULAR_COUNTRIES.map(c => (
-            <TouchableOpacity
+            <Pressable
               key={c.code}
-              style={[styles.countryChip, selectedCountry === c.code && styles.countryChipActive]}
+              style={({ pressed }) => [
+                styles.countryChip,
+                selectedCountry === c.code && styles.countryChipActive,
+                pressed && styles.btnPressed,
+              ]}
               onPress={() => setSelectedCountry(c.code)}
             >
-              <Text style={styles.countryFlag}>{c.flag}</Text>
+              <View style={[styles.countryCodeBadge, selectedCountry === c.code && styles.countryCodeBadgeActive]}>
+                <Text style={[styles.countryCodeText, selectedCountry === c.code && styles.countryCodeTextActive]}>
+                  {c.code}
+                </Text>
+              </View>
               <Text style={[styles.countryName, selectedCountry === c.code && styles.countryNameActive]}>
                 {c.name}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </ScrollView>
 
         {/* Search + Controls */}
         <View style={[glass.panel, styles.controlsRow]}>
           <View style={[glass.input, styles.searchBox]}>
-            <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
               style={styles.searchInput}
               value={searchTerm}
@@ -259,32 +255,14 @@ export default function PlansScreen() {
             />
           </View>
 
-          <View style={styles.controlsRight}>
-            <View style={styles.currencyToggle}>
-              <Text style={styles.currencyLabel}>Currency:</Text>
-              <TouchableOpacity
-                style={[styles.currencyBtn, currency === 'GHS' && styles.currencyBtnActive]}
-                onPress={() => setCurrency('GHS')}
-              >
-                <Text style={[styles.currencyBtnText, currency === 'GHS' && styles.currencyBtnTextActive]}>GHS</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.currencyBtn, currency === 'USD' && styles.currencyBtnActive]}
-                onPress={() => setCurrency('USD')}
-              >
-                <Text style={[styles.currencyBtnText, currency === 'USD' && styles.currencyBtnTextActive]}>USD</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.sortBtn}
-              onPress={() => setSortOrder(s => s === 'low' ? 'high' : 'low')}
-            >
-              <Text style={styles.sortBtnText}>
-                ↕ Price: {sortOrder === 'low' ? 'Low→High' : 'High→Low'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Pressable
+            style={({ pressed }) => [styles.sortBtn, pressed && styles.btnPressed]}
+            onPress={() => setSortOrder(s => s === 'low' ? 'high' : 'low')}
+          >
+            <Text style={styles.sortBtnText}>
+              Price: {sortOrder === 'low' ? 'Low → High' : 'High → Low'}
+            </Text>
+          </Pressable>
         </View>
 
         {/* Plans */}
@@ -292,11 +270,16 @@ export default function PlansScreen() {
           [0, 1, 2].map(i => (
             <View key={i} style={[glass.panel, styles.planSkeleton]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-                <View style={[styles.skel, { width: 60, height: 18, borderRadius: 9 }]} />
-                <View style={[styles.skel, { width: 80, height: 18, borderRadius: 4 }]} />
+                <SkeletonBox width={60} height={18} borderRadius={9} />
+                <SkeletonBox width={80} height={18} borderRadius={4} />
               </View>
-              <View style={[styles.skel, { width: '70%', height: 16, marginBottom: 8 }]} />
-              <View style={[styles.skel, { width: '40%', height: 13 }]} />
+              <SkeletonBox width="70%" height={16} style={{ marginBottom: 8 }} />
+              <SkeletonBox width="40%" height={13} />
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                <SkeletonBox width="30%" height={44} borderRadius={10} />
+                <SkeletonBox width="30%" height={44} borderRadius={10} />
+                <SkeletonBox width="30%" height={44} borderRadius={10} />
+              </View>
             </View>
           ))
         ) : filtered.length === 0 ? (
@@ -310,6 +293,9 @@ export default function PlansScreen() {
               key={plan.id}
               plan={plan}
               currency={currency}
+              exchangeRates={exchangeRates}
+              country={selectedCountry}
+              isTopUp={!!topUpEsim}
               onSelect={() => {
                 setCheckoutPlan(plan);
                 router.push('/checkout');
@@ -325,42 +311,43 @@ export default function PlansScreen() {
 function PlanCard({
   plan,
   currency,
+  exchangeRates,
+  country,
+  isTopUp,
   onSelect,
 }: {
   plan: ESimPlan;
-  currency: 'USD' | 'GHS';
+  currency: string;
+  exchangeRates: Record<string, number>;
+  country: string;
+  isTopUp: boolean;
   onSelect: () => void;
 }) {
   const isBest = plan.tag.toLowerCase().includes('best') || plan.tag.toLowerCase().includes('unlimited');
+  const primaryPrice = formatCurrencyPrice(plan.priceGhs, currency, exchangeRates);
+  const ghsLabel = `GH₵ ${plan.priceGhs.toFixed(2)}`;
 
   return (
     <View style={[glass.panel, styles.planCard, isBest && styles.planCardBest]}>
       <View style={styles.planHeader}>
-        <View style={[styles.planTag, isBest && styles.planTagBest]}>
-          <Text style={[styles.planTagText, isBest && styles.planTagTextBest]}>{plan.tag}</Text>
+        <View style={[styles.planTag, isBest && styles.planTagBest, { flexShrink: 1, maxWidth: '55%' }]}>
+          <Text style={[styles.planTagText, isBest && styles.planTagTextBest]} numberOfLines={1}>{plan.tag}</Text>
         </View>
-        <View style={styles.planPriceBox}>
-          {currency === 'GHS' ? (
-            <>
-              <Text style={styles.planPriceMain}>GHS {plan.priceGhs}</Text>
-              <Text style={styles.planPriceAlt}>~ ${plan.priceUsd} USD</Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.planPriceMain}>${plan.priceUsd} USD</Text>
-              <Text style={styles.planPriceAlt}>~ GHS {plan.priceGhs}</Text>
-            </>
+        <View style={[styles.planPriceBox, { flexShrink: 0 }]}>
+          <Text style={styles.planPriceMain} numberOfLines={1}>{primaryPrice}</Text>
+          {currency !== 'GHS' && (
+            <Text style={styles.planPriceAlt} numberOfLines={1}>~ {ghsLabel}</Text>
           )}
         </View>
       </View>
 
-      <Text style={styles.planName}>{plan.name}</Text>
-      <Text style={styles.planSpeed}>📶 {plan.speed}</Text>
+      <Text style={styles.planName} numberOfLines={2}>{plan.name}</Text>
+      <Text style={styles.planSpeed}>{plan.speed}</Text>
 
       <View style={styles.planDetails}>
         <View style={styles.planDetailRow}>
-          <View style={styles.planDetailIcon}>
-            <Text>🗄️</Text>
+          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(255,215,0,0.08)' }]}>
+            <Text style={styles.planDetailIconText}>D</Text>
           </View>
           <View>
             <Text style={styles.planDetailValue}>{plan.dataGb}</Text>
@@ -368,8 +355,8 @@ function PlanCard({
           </View>
         </View>
         <View style={styles.planDetailRow}>
-          <View style={styles.planDetailIcon}>
-            <Text>📅</Text>
+          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(148,236,180,0.08)' }]}>
+            <Text style={[styles.planDetailIconText, { color: '#94ecb4' }]}>V</Text>
           </View>
           <View>
             <Text style={styles.planDetailValue}>{plan.validityDays} {plan.validityDays === 1 ? 'Day' : 'Days'}</Text>
@@ -377,36 +364,36 @@ function PlanCard({
           </View>
         </View>
         <View style={styles.planDetailRow}>
-          <View style={styles.planDetailIcon}>
-            <Text>✨</Text>
+          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(255,215,0,0.08)' }]}>
+            <Text style={styles.planDetailIconText}>C</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.planDetailValue}>{plan.culturalInsightTitle}</Text>
-            <Text style={[styles.planDetailLabel, { fontStyle: 'italic', marginTop: 2 }]}>{plan.culturalInsightDesc}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.planDetailValue} numberOfLines={2}>{plan.culturalInsightTitle}</Text>
+            <Text style={[styles.planDetailLabel, { fontStyle: 'italic', marginTop: 2 }]} numberOfLines={3}>{plan.culturalInsightDesc}</Text>
           </View>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.activateBtn} onPress={onSelect} activeOpacity={0.85}>
-        <Text style={styles.activateBtnText}>ACTIVATE NOW</Text>
-      </TouchableOpacity>
+      <View style={styles.planBtnRow}>
+        <Pressable
+          style={({ pressed }) => [styles.coverageBtn, pressed && styles.btnPressed]}
+          onPress={() => router.push(`/coverage-map?country=${country}&planName=${encodeURIComponent(plan.name)}`)}
+        >
+          <Text style={styles.coverageBtnText}>Coverage Map</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.activateBtn, pressed && styles.activateBtnPressed]}
+          onPress={onSelect}
+        >
+          <Text style={styles.activateBtnText}>{isTopUp ? 'ADD DATA' : 'ACTIVATE NOW'}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.surface },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: 'rgba(19,19,19,0.9)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(77,71,50,0.3)',
-    gap: 8,
-  },
+  root: { flex: 1, backgroundColor: 'transparent' },
   headerBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   headerBadge: {
     backgroundColor: 'rgba(255,215,0,0.1)',
@@ -431,31 +418,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   refreshIcon: { color: COLORS.gold, fontSize: 20, fontWeight: '700' },
+  btnPressed: { opacity: 0.6, transform: [{ scale: 0.96 }] },
   scroll: { padding: 16, gap: 14, paddingBottom: 40 },
 
-  hubCard: { padding: 16, gap: 12 },
-  hubCardHeader: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', paddingBottom: 10 },
-  hubCardTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  hubCardSub: { color: COLORS.textDim, fontSize: 10, marginTop: 3 },
-  hubInfo: { gap: 10 },
-  hubNameRow: { gap: 2 },
-  hubLocation: { color: COLORS.gold, fontSize: 9, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  hubName: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  hubTable: { gap: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 10 },
-  hubRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 3 },
-  hubRowLabel: { color: COLORS.textDim, fontSize: 10, flex: 1 },
-  hubRowValue: { color: '#fff', fontSize: 10, fontWeight: '700', textAlign: 'right' },
-  hubInsight: { color: '#d0cdc8', fontSize: 11, lineHeight: 17 },
-  wisdomRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-  wisdomSymbol: { fontSize: 20, color: COLORS.gold },
-  wisdomTitle: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  wisdomMeaning: { color: COLORS.textMuted, fontSize: 10, lineHeight: 16, marginTop: 2 },
+  heritageSectionHeader: { gap: 2 },
+  heritageSectionTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  heritageSectionSub: { color: COLORS.textDim, fontSize: 10 },
+  heritageScroll: { marginBottom: 2 },
+  heritageCard: {
+    width: 160,
+    height: 110,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 10,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.1)',
+  },
+  heritageCardImg: { width: '100%', height: '100%' },
+  heritageCardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  heritageCardContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    gap: 2,
+  },
+  heritageCardTag: { color: COLORS.gold, fontSize: 7, fontWeight: '800', letterSpacing: 1 },
+  heritageCardName: { color: '#fff', fontSize: 11, fontWeight: '700', lineHeight: 14 },
+  heritageCardLoc: { color: '#d0cdc8', fontSize: 9 },
+
+  topUpBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  topUpBannerLabel: { color: COLORS.gold, fontSize: 8, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  topUpBannerPlan: { color: '#fff', fontSize: 13, fontWeight: '700', marginTop: 1 },
+  topUpBannerClose: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topUpBannerCloseText: { color: '#fff', fontSize: 18, fontWeight: '300', lineHeight: 20 },
 
   countryScroll: { marginBottom: 2 },
   countryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
@@ -465,21 +489,23 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   countryChipActive: { backgroundColor: 'rgba(255,215,0,0.12)', borderColor: COLORS.gold },
-  countryFlag: { fontSize: 18 },
+  countryCodeBadge: {
+    width: 26,
+    height: 18,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countryCodeBadgeActive: { backgroundColor: 'rgba(255,215,0,0.2)' },
+  countryCodeText: { color: COLORS.textDim, fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  countryCodeTextActive: { color: COLORS.gold },
   countryName: { color: COLORS.textMuted, fontSize: 12, fontWeight: '600' },
   countryNameActive: { color: COLORS.gold },
 
-  controlsRow: { padding: 12, gap: 10 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  searchIcon: { fontSize: 15 },
+  controlsRow: { padding: 12, gap: 10, flexDirection: 'row', alignItems: 'center' },
+  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   searchInput: { flex: 1, color: '#fff', fontSize: 13 },
-  controlsRight: { flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
-  currencyToggle: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.clay, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, paddingVertical: 4, paddingHorizontal: 6 },
-  currencyLabel: { color: COLORS.textDim, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  currencyBtn: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  currencyBtnActive: { backgroundColor: COLORS.gold },
-  currencyBtnText: { color: COLORS.textMuted, fontSize: 10, fontWeight: '700' },
-  currencyBtnTextActive: { color: '#000' },
   sortBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,9 +538,22 @@ const styles = StyleSheet.create({
   planSpeed: { color: COLORS.gold, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   planDetails: { gap: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12 },
   planDetailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  planDetailIcon: { width: 32, height: 32, borderRadius: 6, backgroundColor: 'rgba(255,215,0,0.05)', alignItems: 'center', justifyContent: 'center' },
+  planDetailIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  planDetailIconText: { color: COLORS.gold, fontSize: 11, fontWeight: '900' },
   planDetailValue: { color: '#fff', fontSize: 13, fontWeight: '700' },
   planDetailLabel: { color: COLORS.textDim, fontSize: 9, marginTop: 1 },
-  activateBtn: { backgroundColor: COLORS.gold, paddingVertical: 13, borderRadius: 10, alignItems: 'center', marginTop: 4 },
+  planBtnRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  coverageBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: 'rgba(32,31,31,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.25)',
+  },
+  coverageBtnText: { color: COLORS.gold, fontWeight: '700', fontSize: 11 },
+  activateBtn: { flex: 1, backgroundColor: COLORS.gold, paddingVertical: 13, borderRadius: 10, alignItems: 'center' },
+  activateBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.97 }] },
   activateBtnText: { color: '#000', fontWeight: '800', fontSize: 12, letterSpacing: 1.5 },
 });

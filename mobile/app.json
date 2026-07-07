@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#050505",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.simfinity.app"
@@ -27,7 +28,20 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Simfinity needs photo access to set your profile picture."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FFD700"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
