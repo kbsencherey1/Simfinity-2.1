@@ -1,6 +1,6 @@
 package com.simfinity.backend.controller;
 
-import com.simfinity.backend.service.GeminiService;
+import com.simfinity.backend.service.InsightService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,16 +10,16 @@ import java.util.Map;
 @RequestMapping("/api")
 public class InsightController {
 
-    private final GeminiService geminiService;
+    private final InsightService insightService;
 
-    public InsightController(GeminiService geminiService) {
-        this.geminiService = geminiService;
+    public InsightController(InsightService insightService) {
+        this.insightService = insightService;
     }
 
     @GetMapping("/local-insight")
     public ResponseEntity<Map<String, Object>> getLocalInsight(
             @RequestParam(required = false) String country) {
-        Map<String, Object> result = geminiService.getLocalInsight(country);
+        Map<String, Object> result = insightService.getLocalInsight(country);
         return ResponseEntity.ok(result);
     }
 }
