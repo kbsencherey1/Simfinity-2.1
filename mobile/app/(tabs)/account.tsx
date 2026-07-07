@@ -1,38 +1,91 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Image,
+  Pressable,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { TouristBackground } from '../../components/TouristBackground';
+import { AvatarImage } from '../../components/AvatarImage';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
-import { useApp } from '../../context/AppContext';
-import { HERITAGE_IMAGES } from '../../data';
+import { useApp, CURRENCIES } from '../../context/AppContext';
+import { API_BASE } from '../../config';
 
 export default function AccountScreen() {
-  const { user, isLoggedIn, setIsLoggedIn } = useApp();
+  const { user, isLoggedIn, logout, token, userId, avatarUrl, setAvatarUrl, currency, setCurrency } = useApp();
+  const [uploading, setUploading] = useState(false);
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Allow photo access to set a profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    setUploading(true);
+    try {
+      const asset = result.assets[0];
+      const formData = new FormData();
+      formData.append('file', {
+        uri: asset.uri,
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
+      } as any);
+
+      const res = await fetch(`${API_BASE}/api/user/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        setAvatarUrl(`${API_BASE}/api/user/avatar/${userId}?t=${Date.now()}`);
+      } else {
+        Alert.alert('Upload failed', 'Could not save photo. Please try again.');
+      }
+    } catch {
+      Alert.alert('Upload failed', 'Network error. Make sure the server is running.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
     router.replace('/login');
   };
 
   if (!isLoggedIn) {
     return (
       <View style={styles.root}>
+        <TouristBackground />
         <SafeAreaView style={styles.centeredBox}>
-          <Text style={styles.lockIcon}>🔐</Text>
+          <View style={styles.lockPlaceholder}>
+            <Text style={styles.lockPlaceholderText}>?</Text>
+          </View>
           <Text style={styles.notLoggedTitle}>Sign in to access your account</Text>
-          <TouchableOpacity style={styles.signInBtn} onPress={() => router.push('/login')}>
+          <Pressable
+            style={({ pressed }) => [styles.signInBtn, pressed && styles.signInBtnPressed]}
+            onPress={() => router.push('/login')}
+          >
             <Text style={styles.signInBtnText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/signup')}>
+          </Pressable>
+          <Pressable onPress={() => router.push('/signup')} style={({ pressed }) => pressed && { opacity: 0.6 }}>
             <Text style={styles.createLink}>Create Account</Text>
-          </TouchableOpacity>
+          </Pressable>
         </SafeAreaView>
       </View>
     );
@@ -40,6 +93,7 @@ export default function AccountScreen() {
 
   return (
     <View style={styles.root}>
+      <TouristBackground />
       <SafeAreaView edges={['top']} style={styles.header}>
         <Text style={styles.headerTitle}>Account</Text>
       </SafeAreaView>
@@ -47,18 +101,24 @@ export default function AccountScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Profile Card */}
         <View style={[glass.panel, styles.profileCard]}>
-          <View style={styles.avatarWrap}>
-            <Image
-              source={{ uri: HERITAGE_IMAGES.avatarKwame }}
-              style={styles.avatar}
-            />
+          <Pressable onPress={handlePickImage} style={styles.avatarWrap} disabled={uploading}>
+            <AvatarImage url={avatarUrl} size={64} />
+            {uploading ? (
+              <View style={styles.uploadingOverlay}>
+                <ActivityIndicator size="small" color={COLORS.gold} />
+              </View>
+            ) : (
+              <View style={styles.editBadge}>
+                <Text style={styles.editBadgeText}>✎</Text>
+              </View>
+            )}
             <View style={styles.verifiedDot}>
               <Text style={styles.verifiedDotIcon}>✓</Text>
             </View>
-          </View>
+          </Pressable>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user.fullName}</Text>
-            <Text style={styles.profileEmail}>{user.email}</Text>
+            <Text style={styles.profileName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{user.fullName}</Text>
+            <Text style={styles.profileEmail} numberOfLines={1} ellipsizeMode="middle">{user.email}</Text>
             <View style={styles.idVerifiedBadge}>
               <Text style={styles.idVerifiedText}>✓ Ghana ID Verified</Text>
             </View>
@@ -67,69 +127,93 @@ export default function AccountScreen() {
 
         {/* Menu List */}
         <View style={[glass.panel, styles.menuCard]}>
-          <TouchableOpacity
-            style={styles.menuItem}
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
             onPress={() => router.push('/personal-info')}
-            activeOpacity={0.7}
           >
-            <Text style={styles.menuIcon}>📋</Text>
+            <View style={[styles.menuIconBox, { backgroundColor: 'rgba(255,215,0,0.1)', borderColor: 'rgba(255,215,0,0.25)' }]}>
+              <Text style={[styles.menuIconLetter, { color: COLORS.gold }]}>P</Text>
+            </View>
             <View style={styles.menuItemText}>
               <Text style={styles.menuLabel}>Personal Information</Text>
               <Text style={styles.menuSub}>Edit custom details and cellular configs</Text>
             </View>
             <Text style={styles.menuArrow}>›</Text>
-          </TouchableOpacity>
-
-          <View style={styles.menuDivider} />
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => router.push('/travel-docs')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.menuIcon}>📒</Text>
-            <View style={styles.menuItemText}>
-              <Text style={styles.menuLabel}>Travel Documents</Text>
-              <Text style={styles.menuSub}>View passports, active entry visas, vaccine records</Text>
-            </View>
-            <Text style={styles.menuArrow}>›</Text>
-          </TouchableOpacity>
+          </Pressable>
 
           <View style={styles.menuDivider} />
 
           <View style={styles.menuItem}>
-            <Text style={styles.menuIcon}>🔒</Text>
+            <View style={[styles.menuIconBox, { backgroundColor: 'rgba(255,215,0,0.06)', borderColor: 'rgba(255,215,0,0.15)' }]}>
+              <Text style={[styles.menuIconLetter, { color: COLORS.textDim }]}>S</Text>
+            </View>
             <View style={styles.menuItemText}>
               <Text style={styles.menuLabel}>Privacy & Security</Text>
               <Text style={styles.menuSub}>ENCRYPTED CODES: SHA-256 enabled</Text>
             </View>
-            <Text style={styles.menuArrowGray}>✓</Text>
+            <Text style={styles.menuArrowGreen}>✓</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
-          <Text style={styles.logoutIcon}>🚪</Text>
+        {/* Currency Preference */}
+        <View style={[glass.panel, styles.currencyCard]}>
+          <Text style={styles.currencyCardTitle}>CURRENCY PREFERENCE</Text>
+          <Text style={styles.currencyCardSub}>Prices display in your selected currency</Text>
+          <View style={styles.currencyGrid}>
+            {CURRENCIES.map(c => (
+              <Pressable
+                key={c.code}
+                style={({ pressed }) => [
+                  styles.currencyChip,
+                  currency === c.code && styles.currencyChipActive,
+                  pressed && { opacity: 0.75 },
+                ]}
+                onPress={() => setCurrency(c.code)}
+              >
+                <Text style={[styles.currencyChipSym, currency === c.code && styles.currencyChipSymActive]}>
+                  {c.symbol}
+                </Text>
+                <Text style={[styles.currencyChipCode, currency === c.code && styles.currencyChipCodeActive]}>
+                  {c.code}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
+          onPress={handleLogout}
+        >
           <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+        </Pressable>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.surface },
+  root: { flex: 1, backgroundColor: 'transparent' },
   centeredBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
-  lockIcon: { fontSize: 48 },
+  lockPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockPlaceholderText: { color: COLORS.gold, fontSize: 28, fontWeight: '700' },
   notLoggedTitle: { color: COLORS.textMuted, fontSize: 16, textAlign: 'center' },
   signInBtn: { backgroundColor: COLORS.gold, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 10 },
+  signInBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.97 }] },
   signInBtnText: { color: '#000', fontWeight: '800', fontSize: 14 },
   createLink: { color: COLORS.gold, fontWeight: '700', fontSize: 13 },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: 'rgba(19,19,19,0.9)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(77,71,50,0.3)',
   },
   headerTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
   scroll: { padding: 16, gap: 16, paddingBottom: 40 },
@@ -143,14 +227,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,215,0,0.15)',
   },
   avatarWrap: { position: 'relative' },
-  avatar: {
-    width: 64,
-    height: 64,
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
     borderRadius: 32,
-    borderWidth: 2,
-    borderColor: COLORS.gold,
-    backgroundColor: COLORS.clay,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  editBadge: {
+    position: 'absolute',
+    bottom: -2,
+    left: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editBadgeText: { color: COLORS.gold, fontSize: 10, fontWeight: '700' },
   verifiedDot: {
     position: 'absolute',
     top: -2,
@@ -183,13 +280,22 @@ const styles = StyleSheet.create({
 
   menuCard: { overflow: 'hidden', padding: 0 },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
-  menuDivider: { height: 1, backgroundColor: 'rgba(77,71,50,0.25)', marginHorizontal: 0 },
-  menuIcon: { fontSize: 22 },
+  menuItemPressed: { backgroundColor: 'rgba(255,215,0,0.04)' },
+  menuDivider: { height: 1, backgroundColor: 'rgba(77,71,50,0.25)' },
+  menuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuIconLetter: { fontSize: 13, fontWeight: '900' },
   menuItemText: { flex: 1 },
   menuLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
   menuSub: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
   menuArrow: { color: COLORS.textDim, fontSize: 22, fontWeight: '700' },
-  menuArrowGray: { color: COLORS.greenLight, fontSize: 16, fontWeight: '700' },
+  menuArrowGreen: { color: COLORS.greenLight, fontSize: 16, fontWeight: '700' },
 
   logoutBtn: {
     flexDirection: 'row',
@@ -202,6 +308,29 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(204,78,60,0.4)',
     backgroundColor: 'rgba(204,78,60,0.1)',
   },
-  logoutIcon: { fontSize: 18 },
+  logoutBtnPressed: { backgroundColor: 'rgba(204,78,60,0.22)', transform: [{ scale: 0.98 }] },
   logoutText: { color: '#cc4e3c', fontWeight: '700', fontSize: 15 },
+
+  currencyCard: { padding: 16, gap: 10 },
+  currencyCardTitle: { color: COLORS.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  currencyCardSub: { color: COLORS.textDim, fontSize: 11, marginTop: -6 },
+  currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  currencyChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+    minWidth: 56,
+  },
+  currencyChipActive: {
+    borderColor: COLORS.gold,
+    backgroundColor: 'rgba(255,215,0,0.12)',
+  },
+  currencyChipSym: { color: COLORS.textDim, fontSize: 12, fontWeight: '700' },
+  currencyChipSymActive: { color: COLORS.gold },
+  currencyChipCode: { color: COLORS.textMuted, fontSize: 9, fontWeight: '600', marginTop: 2 },
+  currencyChipCodeActive: { color: COLORS.gold },
 });

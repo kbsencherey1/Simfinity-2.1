@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: simfinity-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: simfinity
+      POSTGRES_USER: simfinity
+      POSTGRES_PASSWORD: simfinity
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: simfinity-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@simfinity.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simfinity-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: simfinity
+      DB_USER: simfinity
+      DB_PASSWORD: simfinity
+      # Set your real API keys here or in a .env file
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      ZENDIT_API_KEY: ${ZENDIT_API_KEY:-}
+      OPENCELLID_API_KEY: ${OPENCELLID_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+    volumes:
+      - avatars_data:/app/avatars
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  avatars_data:

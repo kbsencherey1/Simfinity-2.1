@@ -8,10 +8,15 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 @Service
 public class GeminiService {
+
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
@@ -215,7 +220,7 @@ public class GeminiService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode body = response.getBody();
-                String text = body.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText("{}");
+                String text = body.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText("{}");
 
                 Map<String, Object> parsed;
                 try {
@@ -229,7 +234,7 @@ public class GeminiService {
 
                 // Extract grounding sources
                 List<Map<String, String>> sources = new ArrayList<>();
-                JsonNode groundingChunks = body.path("candidates").get(0)
+                JsonNode groundingChunks = body.path("candidates").path(0)
                     .path("groundingMetadata").path("groundingChunks");
                 if (groundingChunks.isArray()) {
                     Map<String, String> seen = new LinkedHashMap<>();
@@ -250,7 +255,7 @@ public class GeminiService {
                 return result;
             }
         } catch (Exception e) {
-            System.out.println("[Offline Fallback] Gemini unavailable for: " + selectedCountry + " | " + e.getMessage());
+            log.warn("[Gemini] Unavailable for: {} — {}", selectedCountry, e.getMessage());
         }
 
         return buildFallback(selectedCountry);
