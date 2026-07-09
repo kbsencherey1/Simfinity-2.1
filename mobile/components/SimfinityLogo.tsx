@@ -7,7 +7,7 @@ interface Props {
   showText?: boolean;
 }
 
-const logoAsset = require('../assets/icon.png');
+const logoAsset = require('../assets/logo.png');
 
 export function SimfinityLogo({ size = 80, showText = false }: Props) {
   return (
