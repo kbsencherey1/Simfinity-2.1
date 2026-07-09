@@ -114,7 +114,7 @@ export const TOURIST_SPOTS: TouristSpot[] = [
     name: 'Kakum Canopy Walkway',
     location: 'Central Region, Ghana',
     description: 'A spectacular perspective of the dense tropical rainforest, suspended 30 meters high across seven suspension bridges.',
-    imageUrl: 'https://images.unsplash.com/photo-1548625361-155deee21623?auto=format&fit=crop&w=1600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1760379682992-addb38e0f6c8?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 'cape_coast',
@@ -135,7 +135,7 @@ export const TOURIST_SPOTS: TouristSpot[] = [
     name: 'Wli Waterfalls',
     location: 'Volta Region, Ghana',
     description: 'The highest cascading waterfall in West Africa, flowing with majestic purity deep inside a lush mountain sanctuary.',
-    imageUrl: 'https://images.unsplash.com/photo-1432406186267-3c72dee6e491?auto=format&fit=crop&w=1600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1772955527473-14ab0ae328af?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 'elmina',
