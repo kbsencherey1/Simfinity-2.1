@@ -35,8 +35,8 @@ export default function SplashScreen() {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(contentOpacity, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      Animated.timing(contentSlide, { toValue: 0, duration: 1000, useNativeDriver: true }),
+      Animated.timing(contentOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(contentSlide, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
 
     // Sync postcard to the global background cycle (same 5s interval)
@@ -48,8 +48,8 @@ export default function SplashScreen() {
 
   const spot = TOURIST_SPOTS[currentIdx];
 
-  // Hold rendering until we know auth state — prevents flash of welcome screen for returning users
-  if (!authReady || isLoggedIn) return null;
+  // Hide entirely once logged in (router.replace fires in the effect above)
+  if (isLoggedIn) return null;
 
   return (
     <View style={styles.root}>
