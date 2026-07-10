@@ -115,11 +115,11 @@ export function SimfinityLogo({
           {/* Main bold geometric logo type */}
           <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-[0.15em] uppercase select-none leading-none">
             <span className={textColor}>SIM</span>
-            <span className="bg-gradient-to-r from-[#00c9ff] via-[#2575fc] to-[#bf55ec] bg-clip-text text-transparent">FINITY</span>
+            <span className="bg-linear-to-r from-[#00c9ff] via-[#2575fc] to-[#bf55ec] bg-clip-text text-transparent">FINITY</span>
           </h2>
           {/* Dynamic tag subtitle */}
           <p className={`${subtitleColor} font-mono text-[9px] sm:text-[10px] tracking-[0.22em] uppercase mt-2.5 font-bold whitespace-nowrap opacity-90`}>
-            UNLIMITED SOLUTIONS <span className="text-[#ffd700] mx-0.5">•</span> ENDLESS POSSIBILITIES
+            UNLIMITED SOLUTIONS <span className="text-gold mx-0.5">•</span> ENDLESS POSSIBILITIES
           </p>
         </div>
       )}
@@ -161,7 +161,7 @@ export function SimfinityNavbarLogo({
       {/* Brand title */}
       <span className="font-display font-black text-base sm:text-lg tracking-[0.12em] uppercase select-none transition-all duration-200">
         <span className="text-[#fcfcfa] group-hover:text-white transition-colors duration-200">SIM</span>
-        <span className="bg-gradient-to-r from-[#00c9ff] via-[#4d94ff] to-[#bf55ec] bg-clip-text text-transparent group-hover:brightness-110">FINITY</span>
+        <span className="bg-linear-to-r from-[#00c9ff] via-[#4d94ff] to-[#bf55ec] bg-clip-text text-transparent group-hover:brightness-110">FINITY</span>
       </span>
     </div>
   );
