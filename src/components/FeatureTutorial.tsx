@@ -114,7 +114,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
     <AnimatePresence>
       <div 
         id="tutorial-overlay" 
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-end md:justify-center p-4 bg-black/65 backdrop-blur-[1.5px]"
+        className="fixed inset-0 z-9999 flex flex-col items-center justify-end md:justify-center p-4 bg-black/65 backdrop-blur-[1.5px]"
       >
         {/* Step-specific highlighting boundary layout */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -130,7 +130,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
                 repeat: Infinity, 
                 ease: "easeInOut" 
               }}
-              className="absolute w-36 h-36 rounded-full border-2 border-dashed border-[#ffd700] bg-[#ffd700]/5 pointer-events-none"
+              className="absolute w-36 h-36 rounded-full border-2 border-dashed border-gold bg-gold/5 pointer-events-none"
               style={{
                 // General focal positions matching the target features 
                 left: step.screenId === ScreenId.GHANA_PLANS ? '50%' : step.screenId === ScreenId.MY_ESIMS ? '50%' : '50%',
@@ -147,7 +147,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-xl glass-panel border border-[#ffd700]/30 rounded-2xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(255,215,0,0.15)] bg-slate-950/95 overflow-hidden"
+          className="relative w-full max-w-xl glass-panel border border-gold/30 rounded-2xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(255,215,0,0.15)] bg-slate-950/95 overflow-hidden"
         >
           {/* Subtle watermark */}
           <div className="absolute -bottom-8 -right-8 opacity-[0.03] select-none pointer-events-none font-bold text-9xl text-white">
@@ -156,7 +156,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
 
           {/* Top Progress bar and counter */}
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider font-extrabold text-[#ffd700] bg-[#ffd700]/15 px-2.5 py-1 rounded">
+            <span className="font-mono text-[10px] uppercase tracking-wider font-extrabold text-gold bg-gold/15 px-2.5 py-1 rounded">
               Simfinity Tour • Step {currentStepIndex + 1} of {TUTORIAL_STEPS.length}
             </span>
             <button
@@ -174,7 +174,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
               <div
                 key={idx}
                 className={`h-full flex-1 rounded-full transition-all duration-300 ${
-                  idx <= currentStepIndex ? 'bg-[#ffd700]' : 'bg-gray-800'
+                  idx <= currentStepIndex ? 'bg-gold' : 'bg-gray-800'
                 }`}
               />
             ))}
@@ -183,7 +183,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
           {/* Main Content Area */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[#ffd700]/10 border border-[#ffd700]/20 flex items-center justify-center text-[#ffd700] shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
                 <span className="material-symbols-outlined text-2xl">{step.iconName}</span>
               </div>
               <div>
@@ -207,8 +207,8 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
             </div>
 
             {/* Cultural Insights Tab */}
-            <div className="border border-amber-900/10 bg-amber-500/[0.03] rounded-xl p-4 space-y-2">
-              <div className="flex items-center gap-1.5 text-[#ffd700] font-mono text-[9px] uppercase tracking-wider font-extrabold">
+            <div className="border border-amber-900/10 bg-amber-500/3 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-gold font-mono text-[9px] uppercase tracking-wider font-extrabold">
                 <span className="material-symbols-outlined text-xs">local_library</span>
                 <span>Cultural Association: {step.adinkraSymbol}</span>
               </div>
@@ -249,7 +249,7 @@ export function FeatureTutorial({ isOpen, onClose, onNavigate, isLoggedIn = fals
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-5 py-2.5 bg-[#ffd700] hover:bg-[#ffe240] text-black rounded-lg text-xs font-mono font-black shadow-[0_4px_14px_rgba(255,215,0,0.15)] transition duration-150 cursor-pointer flex items-center gap-1.5 active:scale-95"
+                className="px-5 py-2.5 bg-gold hover:bg-[#ffe240] text-black rounded-lg text-xs font-mono font-black shadow-[0_4px_14px_rgba(255,215,0,0.15)] transition duration-150 cursor-pointer flex items-center gap-1.5 active:scale-95"
               >
                 <span>{isLast ? 'Enter Simfinity' : 'Next Screen'}</span>
                 <span className="material-symbols-outlined text-[14px] font-black">
