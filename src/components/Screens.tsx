@@ -29,7 +29,7 @@ export function NavigationWrapper({
   return (
     <div className="min-h-screen flex flex-col justify-between">
       {/* Top Header Bar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-[#131313]/85 backdrop-blur-xl border-b border-[#4d4732]/30 shadow-sm shadow-[#ffd700]/5">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-surface-dim/85 backdrop-blur-xl border-b border-[#4d4732]/30 shadow-sm shadow-gold/5">
         <div className="flex items-center gap-3" onClick={() => onNavigate(ScreenId.HOME, 'none')}>
           <SimfinityNavbarLogo size={26} />
         </div>
@@ -38,14 +38,14 @@ export function NavigationWrapper({
           {isLoggedIn ? (
             <button 
               onClick={() => onNavigate(ScreenId.ACCOUNT, 'none')}
-              className="flex items-center gap-1 text-[#ffd700] hover:text-white transition duration-200"
+              className="flex items-center gap-1 text-gold hover:text-white transition duration-200"
             >
               <span className="material-symbols-outlined text-2xl font-light">account_circle</span>
             </button>
           ) : (
             <button 
               onClick={() => onNavigate(ScreenId.LOGIN, 'push')}
-              className="px-3 py-1 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded text-[#ffd700] font-display text-xs font-semibold hover:bg-[#ffd700] hover:text-black transition"
+              className="px-3 py-1 bg-gold/10 border border-gold/30 rounded text-gold font-display text-xs font-semibold hover:bg-gold hover:text-black transition"
             >
               Sign In
             </button>
@@ -54,12 +54,12 @@ export function NavigationWrapper({
       </header>
 
       {/* Main Screen Content */}
-      <div className="flex-grow pt-16 pb-20">
+      <div className="grow pt-16 pb-20">
         {children}
       </div>
 
       {/* Global Bottom Navigation bar required across flow dashboards */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-[#131313]/90 backdrop-blur-xl border-t border-[#4d4732]/30 shadow-[0_-4px_20px_rgba(255,215,0,0.05)] rounded-t-xl">
+      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface-dim/90 backdrop-blur-xl border-t border-[#4d4732]/30 shadow-[0_-4px_20px_rgba(255,215,0,0.05)] rounded-t-xl">
         <a 
           id="nav-tab-home"
           href="#"
@@ -68,7 +68,7 @@ export function NavigationWrapper({
             onNavigate(ScreenId.HOME, 'none');
           }}
           className={`flex flex-col items-center justify-center transition-colors duration-200 ${
-            currentScreen === ScreenId.HOME ? 'text-[#ffd700]' : 'text-[#d0c6ab] hover:text-[#ffd700]'
+            currentScreen === ScreenId.HOME ? 'text-gold' : 'text-[#d0c6ab] hover:text-gold'
           }`}
         >
           <span className="material-symbols-outlined select-none">home</span>
@@ -83,7 +83,7 @@ export function NavigationWrapper({
             onNavigate(ScreenId.GHANA_PLANS, 'none');
           }}
           className={`flex flex-col items-center justify-center transition-colors duration-200 ${
-            currentScreen === ScreenId.GHANA_PLANS ? 'text-[#ffd700]' : 'text-[#d0c6ab] hover:text-[#ffd700]'
+            currentScreen === ScreenId.GHANA_PLANS ? 'text-gold' : 'text-[#d0c6ab] hover:text-gold'
           }`}
         >
           <span className="material-symbols-outlined select-none">explore</span>
@@ -98,7 +98,7 @@ export function NavigationWrapper({
             onNavigate(ScreenId.MY_ESIMS, 'none');
           }}
           className={`flex flex-col items-center justify-center transition-colors duration-200 ${
-            currentScreen === ScreenId.MY_ESIMS ? 'text-[#ffd700]' : 'text-[#d0c6ab] hover:text-[#ffd700]'
+            currentScreen === ScreenId.MY_ESIMS ? 'text-gold' : 'text-[#d0c6ab] hover:text-gold'
           }`}
         >
           <span className="material-symbols-outlined select-none">sim_card</span>
@@ -113,7 +113,7 @@ export function NavigationWrapper({
             onNavigate(ScreenId.ACCOUNT, 'none');
           }}
           className={`flex flex-col items-center justify-center transition-colors duration-200 ${
-            currentScreen === ScreenId.ACCOUNT ? 'text-[#ffd700]' : 'text-[#d0c6ab] hover:text-[#ffd700]'
+            currentScreen === ScreenId.ACCOUNT ? 'text-gold' : 'text-[#d0c6ab] hover:text-gold'
           }`}
         >
           <span className="material-symbols-outlined select-none">person</span>
@@ -195,14 +195,14 @@ export function LoginScreen({
           </div>
 
           <div className="text-right">
-            <a href="#" onClick={(e) => e.preventDefault()} className="font-mono text-[#ffd700] hover:underline text-xs">
+            <a href="#" onClick={(e) => e.preventDefault()} className="font-mono text-gold hover:underline text-xs">
               Forgot Password?
             </a>
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-[#ffd700] hover:bg-[#e6c200] text-black font-semibold font-display py-3.5 rounded-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#ffd700]/10"
+            className="w-full bg-gold hover:bg-gold-hover text-black font-semibold font-display py-3.5 rounded-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold/10"
           >
             <span>Sign In</span>
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -220,7 +220,7 @@ export function LoginScreen({
                 e.preventDefault();
                 onNavigate(ScreenId.SIGN_UP, 'push');
               }}
-              className="text-[#ffd700] font-bold hover:underline"
+              className="text-gold font-bold hover:underline"
             >
               Create Account
             </a>
@@ -229,7 +229,7 @@ export function LoginScreen({
       </div>
 
       <div className="relative z-10 mt-8 flex items-center gap-1.5 text-xs font-mono text-gray-500">
-        <span className="material-symbols-outlined text-xs text-[#ffd700]">favorite</span>
+        <span className="material-symbols-outlined text-xs text-gold">favorite</span>
         <span>ROOTED IN GHANA</span>
       </div>
     </div>
@@ -264,7 +264,7 @@ export function SignUpScreen({
         <button 
           aria-label="Go back"
           onClick={() => onNavigate(ScreenId.LOGIN, 'push_back')}
-          className="w-10 h-10 rounded-full bg-[#201f1f] hover:bg-[#2a2a2a] border border-[#4d4732]/30 flex items-center justify-center text-[#ffd700] transition cursor-pointer"
+          className="w-10 h-10 rounded-full bg-clay hover:bg-clay-high border border-[#4d4732]/30 flex items-center justify-center text-gold transition cursor-pointer"
         >
           <span className="material-symbols-outlined select-none text-lg">arrow_back</span>
         </button>
@@ -323,7 +323,7 @@ export function SignUpScreen({
           </div>
 
           <div className="flex items-start gap-2.5 py-1">
-            <input type="checkbox" required defaultChecked className="mt-1 rounded text-[#ffd700] focus:ring-0 bg-[#201f1f] border-gray-600" />
+            <input type="checkbox" required defaultChecked className="mt-1 rounded text-gold focus:ring-0 bg-clay border-gray-600" />
             <p className="text-xs text-gray-400">
               I agree to the Terms of Service & Privacy Policy, including secure eSIM digital activation terms.
             </p>
@@ -331,7 +331,7 @@ export function SignUpScreen({
 
           <button 
             type="submit"
-            className="w-full bg-[#ffd700] hover:bg-[#e6c200] text-black font-semibold font-display py-3.5 rounded-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+            className="w-full bg-gold hover:bg-gold-hover text-black font-semibold font-display py-3.5 rounded-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
           >
             <span>Register & Connect</span>
             <span className="material-symbols-outlined text-sm">how_to_reg</span>
@@ -349,7 +349,7 @@ export function SignUpScreen({
                 e.preventDefault();
                 onNavigate(ScreenId.LOGIN, 'push_back');
               }}
-              className="text-[#ffd700] font-bold hover:underline"
+              className="text-gold font-bold hover:underline"
             >
               Log In
             </a>
@@ -409,9 +409,9 @@ export function HomeScreen({
   return (
     <div className="anim-fade px-4 sm:px-6 max-w-4xl mx-auto py-6 space-y-8">
       {/* Welcome Banner */}
-      <section className="glass-panel rounded-2xl p-6 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-l-4 border-l-[#ffd700]">
+      <section className="glass-panel rounded-2xl p-6 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-l-4 border-l-gold">
         <div className="space-y-1 relative z-10 w-full sm:max-w-xl">
-          <span className="bg-[#cc4e3c]/20 text-[#cc4e3c] px-2.5 py-0.5 rounded-full text-[10px] font-mono tracking-wider animate-pulse">UPDATED TOUR AVAILABLE</span>
+          <span className="bg-terracotta/20 text-terracotta px-2.5 py-0.5 rounded-full text-[10px] font-mono tracking-wider animate-pulse">UPDATED TOUR AVAILABLE</span>
           <h2 className="font-display text-2xl font-bold text-white">Simfinity Global</h2>
           <p className="text-gray-400 text-sm">
             Seamless travel eSIM coverage across beautiful Ghana, designed with local pride.
@@ -422,7 +422,7 @@ export function HomeScreen({
             <button 
               type="button"
               onClick={onStartTutorial}
-              className="inline-flex items-center gap-1.5 px-4 py-3 bg-gray-950 hover:bg-gray-900 border border-[#ffd700]/30 hover:border-[#ffd700]/60 text-[#ffd700] rounded-xl font-display text-xs font-bold active:scale-95 duration-200 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-3 bg-gray-950 hover:bg-gray-900 border border-gold/30 hover:border-gold/60 text-gold rounded-xl font-display text-xs font-bold active:scale-95 duration-200 cursor-pointer"
             >
               <span>SIMFINITY TOUR</span>
               <span className="material-symbols-outlined text-sm font-bold animate-pulse">rocket_launch</span>
@@ -430,7 +430,7 @@ export function HomeScreen({
           )}
           <a 
             onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'push')}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffd700] text-black rounded-xl font-display text-sm font-bold shadow-lg shadow-[#ffd700]/10 hover:bg-[#e6c200] active:scale-95 duration-200 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-gold text-black rounded-xl font-display text-sm font-bold shadow-lg shadow-gold/10 hover:bg-gold-hover active:scale-95 duration-200 cursor-pointer"
           >
             <span>FIND PLANS</span>
             <span className="material-symbols-outlined text-sm">explore</span>
@@ -439,18 +439,18 @@ export function HomeScreen({
       </section>
 
       {/* Featured visual slider row */}
-      <section className="relative rounded-2xl overflow-hidden h-64 flex items-center p-6 md:p-10 border border-[#ffd700]/20">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-black/30 z-10"></div>
+      <section className="relative rounded-2xl overflow-hidden h-64 flex items-center p-6 md:p-10 border border-gold/20">
+        <div className="absolute inset-0 bg-linear-to-r from-black/90 to-black/30 z-10"></div>
         <div className="absolute inset-0 z-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${HERITAGE_IMAGES.landscapeAccra})` }}></div>
         <div className="relative z-20 max-w-md space-y-4">
-          <span className="font-mono text-xs text-[#ffd700] font-bold tracking-wider">NATIONWIDE COVERAGE</span>
+          <span className="font-mono text-xs text-gold font-bold tracking-wider">NATIONWIDE COVERAGE</span>
           <h3 className="font-display text-2xl font-extrabold text-white">Stay Connected Anywhere</h3>
           <p className="text-gray-200 text-sm leading-relaxed">
             From the bustling markets of Kejetia to the serene shores of Busua, we've got you covered with unmatched speeds.
           </p>
           <button 
             onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'none')}
-            className="flex items-center gap-1 text-[#ffd700] text-xs font-bold hover:translate-x-1.5 transition-transform font-sans bg-transparent border-0 p-0 cursor-pointer"
+            className="flex items-center gap-1 text-gold text-xs font-bold hover:translate-x-1.5 transition-transform font-sans bg-transparent border-0 p-0 cursor-pointer"
           >
             <span>Browse High-Speed Plans</span>
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -463,7 +463,7 @@ export function HomeScreen({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
           <div>
             <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#ffd700]">language</span>
+              <span className="material-symbols-outlined text-gold">language</span>
               <span>Global Heritage Spotlights</span>
             </h3>
             <p className="text-gray-400 text-xs mt-0.5 font-sans">
@@ -482,7 +482,7 @@ export function HomeScreen({
                 }}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition duration-150 cursor-pointer ${
                   selectedCountry === c && !isLoading
-                    ? 'bg-[#ffd700] text-black shadow-md'
+                    ? 'bg-gold text-black shadow-md'
                     : 'bg-gray-950 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
                 }`}
               >
@@ -495,7 +495,7 @@ export function HomeScreen({
                 setSelectedCountry('');
                 fetchInsight();
               }}
-              className="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-[#ffd700]/10 border border-[#ffd700]/20 text-[#ffd700] flex items-center gap-1 hover:bg-[#ffd700]/15 duration-150 cursor-pointer"
+              className="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-gold/10 border border-gold/20 text-gold flex items-center gap-1 hover:bg-gold/15 duration-150 cursor-pointer"
               title="Fetch random country tip"
             >
               <span className={`material-symbols-outlined text-[10px] ${isLoading ? 'animate-spin' : ''}`}>shuffle</span>
@@ -535,20 +535,20 @@ export function HomeScreen({
                 setSelectedCountry('');
                 fetchInsight();
               }}
-              className="px-4 py-1.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-xs font-mono font-bold text-[#ffd700] rounded-lg transition duration-150 cursor-pointer active:scale-95"
+              className="px-4 py-1.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-xs font-mono font-bold text-gold rounded-lg transition duration-150 cursor-pointer active:scale-95"
             >
               Retry Connection
             </button>
           </div>
         ) : (
-          <div className="border border-[#ffd700]/15 bg-black/45 backdrop-blur-md rounded-xl p-5 space-y-4 relative overflow-hidden transition-all duration-300">
+          <div className="border border-gold/15 bg-black/45 backdrop-blur-md rounded-xl p-5 space-y-4 relative overflow-hidden transition-all duration-300">
             {/* Country watermarked stamp in corner */}
-            <span className="absolute -bottom-6 -right-6 text-7xl font-sans font-black tracking-tighter text-white/[0.03] select-none pointer-events-none uppercase">
+            <span className="absolute -bottom-6 -right-6 text-7xl font-sans font-black tracking-tighter text-white/3 select-none pointer-events-none uppercase">
               {insight?.country}
             </span>
 
-            <div className="flex items-center gap-2 text-xs font-mono text-[#ffd700] uppercase font-bold tracking-wider relative z-10">
-              <span className="material-symbols-outlined text-sm text-[#ffd700]">explore</span>
+            <div className="flex items-center gap-2 text-xs font-mono text-gold uppercase font-bold tracking-wider relative z-10">
+              <span className="material-symbols-outlined text-sm text-gold">explore</span>
               <span>Spotlight: {insight?.country}</span>
             </div>
 
@@ -569,10 +569,10 @@ export function HomeScreen({
                       href={src.uri}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-[#ffd700] font-mono underline transition decoration-gray-800 hover:decoration-[#ffd700]"
+                      className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gold font-mono underline transition decoration-gray-800 hover:decoration-gold"
                     >
                       <span className="material-symbols-outlined text-[11px]">public</span>
-                      <span className="max-w-[150px] truncate">{src.title}</span>
+                      <span className="max-w-37.5 truncate">{src.title}</span>
                     </a>
                   ))}
                 </div>
@@ -585,21 +585,21 @@ export function HomeScreen({
       {/* Connectivity Guides Bento Grid */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-panel p-5 rounded-xl space-y-3">
-          <span className="material-symbols-outlined bg-[#ffd700]/15 text-[#ffd700] p-2.5 rounded-lg text-xl">electric_bolt</span>
+          <span className="material-symbols-outlined bg-gold/15 text-gold p-2.5 rounded-lg text-xl">electric_bolt</span>
           <h4 className="font-display text-base font-bold text-white">Instant Setup</h4>
           <p className="text-gray-400 text-xs leading-relaxed">
             Download your virtual travel eSIM profile immediately. Connect in under 60 seconds of scan.
           </p>
         </div>
         <div className="glass-panel p-5 rounded-xl space-y-3">
-          <span className="material-symbols-outlined bg-[#ffd700]/15 text-[#ffd700] p-2.5 rounded-lg text-xl">payments</span>
+          <span className="material-symbols-outlined bg-gold/15 text-gold p-2.5 rounded-lg text-xl">payments</span>
           <h4 className="font-display text-base font-bold text-white">Dual Currency Checkout</h4>
           <p className="text-gray-400 text-xs leading-relaxed">
             Hassle-free payment using Ghanaian Mobile Money (GHS MoMo) or Global Credit Cards (USD).
           </p>
         </div>
         <div className="glass-panel p-5 rounded-xl space-y-3">
-          <span className="material-symbols-outlined bg-[#ffd700]/15 text-[#ffd700] p-2.5 rounded-lg text-xl">support_agent</span>
+          <span className="material-symbols-outlined bg-gold/15 text-gold p-2.5 rounded-lg text-xl">support_agent</span>
           <h4 className="font-display text-base font-bold text-white">24/7 Local Support</h4>
           <p className="text-gray-400 text-xs leading-relaxed">
             Our specialized support operates straight out of Accra, solving any configuration issues instantly.
@@ -610,12 +610,12 @@ export function HomeScreen({
       {/* Bottom quick navigation guidelines helper */}
       <div className="glass-panel p-4 rounded-xl flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#ffd700]">lock</span>
+          <span className="material-symbols-outlined text-gold">lock</span>
           <span>Authentic & Secure Sandbox Prototype</span>
         </div>
         <button 
           onClick={() => onNavigate(ScreenId.LOGIN, 'push_back')} 
-          className="text-[#ffd700] font-bold hover:underline"
+          className="text-gold font-bold hover:underline"
         >
           Sign In
         </button>
@@ -918,10 +918,10 @@ export function GhanaPlansScreen({
       <div className="flex justify-between items-start gap-4 flex-col sm:flex-row">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded text-[9px] font-mono font-bold text-[#ffd700] uppercase tracking-wider">Multipath Network</span>
+            <span className="px-2 py-0.5 bg-gold/10 border border-gold/30 rounded text-[9px] font-mono font-bold text-gold uppercase tracking-wider">Multipath Network</span>
             <span className="text-gray-500 font-mono text-[10px]">Active Hub: {activeHub.location}</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#ffd700] tracking-tight mt-1">Simfinity Global Exploratorium</h2>
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-gold tracking-tight mt-1">Simfinity Global Exploratorium</h2>
           <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
             190+ countries. Infinite fiber backhauls. Authentic local insights.
           </p>
@@ -931,7 +931,7 @@ export function GhanaPlansScreen({
           <button
             disabled={isLoading}
             onClick={handleRefresh}
-            className={`w-9 h-9 rounded-full bg-gray-900 border border-gray-800 text-[#ffd700] flex items-center justify-center transition hover:border-[#ffd700]/30 hover:bg-gray-800 active:scale-95 ${
+            className={`w-9 h-9 rounded-full bg-gray-900 border border-gray-800 text-gold flex items-center justify-center transition hover:border-gold/30 hover:bg-gray-800 active:scale-95 ${
               isLoading ? 'animate-spin opacity-50 cursor-not-allowed' : 'cursor-pointer'
             }`}
             title="Refresh eSIM Data"
@@ -946,7 +946,7 @@ export function GhanaPlansScreen({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-900 pb-3">
           <div>
             <h3 className="font-display text-base font-bold text-white flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#ffd700]">hub</span>
+              <span className="material-symbols-outlined text-gold">hub</span>
               <span>Global Fiber-Terminal Gateway</span>
             </h3>
             <p className="text-gray-400 text-[11px] font-sans mt-0.5">
@@ -956,7 +956,7 @@ export function GhanaPlansScreen({
           {highlightedPlanId && (
             <button
               onClick={() => setHighlightedPlanId(null)}
-              className="px-2.5 py-1 bg-gray-950 border border-gray-850 hover:border-gray-800 rounded text-[10px] font-mono font-bold text-[#ffd700] flex items-center gap-1 cursor-pointer duration-150"
+              className="px-2.5 py-1 bg-gray-950 border border-gray-850 hover:border-gray-800 rounded text-[10px] font-mono font-bold text-gold flex items-center gap-1 cursor-pointer duration-150"
             >
               <span className="material-symbols-outlined text-[11px]">filter_alt_off</span>
               <span>Reset Selection</span>
@@ -967,14 +967,14 @@ export function GhanaPlansScreen({
         <div className="w-full">
           {/* Site Detailed Digital Insight Card */}
           <div className="space-y-4">
-            <div className="border border-[#ffd700]/15 bg-black/45 backdrop-blur-md rounded-xl p-4 space-y-3.5 relative overflow-hidden">
-              <span className="absolute -bottom-8 -right-8 text-7xl font-sans font-black tracking-tighter text-white/[0.02] select-none pointer-events-none uppercase">
+            <div className="border border-gold/15 bg-black/45 backdrop-blur-md rounded-xl p-4 space-y-3.5 relative overflow-hidden">
+              <span className="absolute -bottom-8 -right-8 text-7xl font-sans font-black tracking-tighter text-white/2 select-none pointer-events-none uppercase">
                 {activeHub.countryCode}
               </span>
 
               {/* Title Header */}
               <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5 text-[9px] font-mono text-[#ffd700] uppercase font-bold tracking-wider">
+                <div className="flex items-center gap-1.5 text-[9px] font-mono text-gold uppercase font-bold tracking-wider">
                   <span className="material-symbols-outlined text-[10px]">location_on</span>
                   <span>{activeHub.location}</span>
                 </div>
@@ -988,11 +988,11 @@ export function GhanaPlansScreen({
                 <tbody>
                   <tr className="border-b border-gray-900 pb-1">
                     <td className="text-gray-500 uppercase text-[8px] py-1">Uplink Status:</td>
-                    <td className="text-[#94ecb4] font-bold py-1 text-right">● SYNCHRONIZED</td>
+                    <td className="text-green-light font-bold py-1 text-right">● SYNCHRONIZED</td>
                   </tr>
                   <tr>
                     <td className="text-gray-500 py-1">Direct Latency:</td>
-                    <td className="text-[#ffd700] font-bold py-1 text-right">{activeHub.latency}</td>
+                    <td className="text-gold font-bold py-1 text-right">{activeHub.latency}</td>
                   </tr>
                   <tr>
                     <td className="text-gray-500 py-1">Downlink Carrier:</td>
@@ -1012,7 +1012,7 @@ export function GhanaPlansScreen({
 
               {/* Localized Digital Soil wisdom block */}
               <div className="flex items-start gap-2 pt-2 border-t border-gray-900/60 text-[10px]">
-                <span className="material-symbols-outlined text-[#ffd700] text-sm select-none shrink-0 p-0.5 bg-[#ffd700]/5 rounded">
+                <span className="material-symbols-outlined text-gold text-sm select-none shrink-0 p-0.5 bg-gold/5 rounded">
                   {activeHub.symbol}
                 </span>
                 <div>
@@ -1034,7 +1034,7 @@ export function GhanaPlansScreen({
                     triggerHighlightPlan(targetPlan ? targetPlan.id : allPlans[0]?.id || `${activeHub.countryCode}-1D-QL`);
                   }
                 }}
-                className="w-full py-2 bg-[#ffd700]/10 border border-[#ffd700]/20 hover:bg-[#ffd700] hover:text-black duration-200 transition-colors rounded-lg text-[10px] font-mono font-extrabold text-[#ffd700] cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 text-center uppercase"
+                className="w-full py-2 bg-gold/10 border border-gold/20 hover:bg-gold hover:text-black duration-200 transition-colors rounded-lg text-[10px] font-mono font-extrabold text-gold cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 text-center uppercase"
               >
                 <span>Focus Hub eSIM Plans</span>
               </button>
@@ -1050,9 +1050,9 @@ export function GhanaPlansScreen({
           Array.from({ length: 3 }).map((_, idx) => (
             <div 
               key={idx}
-              className="glass-panel rounded-xl p-5 border border-[#4d4732]/20 flex flex-col justify-between h-[360px] animate-pulse relative overflow-hidden"
+              className="glass-panel rounded-xl p-5 border border-[#4d4732]/20 flex flex-col justify-between h-90 animate-pulse relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-radial from-[#ffd700]/5 to-transparent pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-radial from-gold/5 to-transparent pointer-events-none"></div>
               
               <div>
                 <div className="flex justify-between items-start mb-4">
@@ -1068,8 +1068,8 @@ export function GhanaPlansScreen({
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-850 flex-shrink-0"></div>
-                    <div className="space-y-1.5 flex-grow font-mono">
+                    <div className="w-8 h-8 rounded-lg bg-gray-850 shrink-0"></div>
+                    <div className="space-y-1.5 grow font-mono">
                       <div className="h-3 bg-gray-855 rounded w-1/4"></div>
                       <div className="h-2.5 bg-gray-900 rounded w-1/2"></div>
                     </div>
@@ -1095,19 +1095,19 @@ export function GhanaPlansScreen({
                 id={`plan-card-${plan.id}`}
                 className={`glass-panel rounded-xl p-5 relative overflow-hidden flex flex-col justify-between h-full transition-all duration-500 scale-100 ${
                   isHighlighted 
-                    ? 'border-2 border-[#ffd700] glow-active-gold ring-1 ring-[#ffd700]/30' 
+                    ? 'border-2 border-gold glow-active-gold ring-1 ring-gold/30' 
                     : isBestValue 
-                      ? 'border-2 border-[#ffd700]/45 glow-gold' 
-                      : 'border border-[#4d4732]/25 hover:border-[#ffd700]/30'
+                      ? 'border-2 border-gold/45 glow-gold' 
+                      : 'border border-[#4d4732]/25 hover:border-gold/30'
                 }`}
               >
                 {/* Visual Background watermark shape */}
                 <div className="absolute -top-4 -right-4 opacity-5 pointer-events-none">
-                  <span className="material-symbols-outlined text-7xl text-[#ffd700]">{plan.culturalInsightSymbolName}</span>
+                  <span className="material-symbols-outlined text-7xl text-gold">{plan.culturalInsightSymbolName}</span>
                 </div>
 
                 {isHighlighted && (
-                  <div className="absolute top-2 left-2 bg-[#ffd700] text-black font-extrabold text-[8.5px] px-1.5 py-0.5 rounded uppercase font-mono animate-bounce z-10 tracking-widest">
+                  <div className="absolute top-2 left-2 bg-gold text-black font-extrabold text-[8.5px] px-1.5 py-0.5 rounded uppercase font-mono animate-bounce z-10 tracking-widest">
                     ⭐ Recommended Choice
                   </div>
                 )}
@@ -1115,19 +1115,19 @@ export function GhanaPlansScreen({
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-wider uppercase font-bold ${
-                      isHighlighted || isBestValue ? 'bg-[#ffd700] text-black' : 'bg-gray-800 text-gray-400'
+                      isHighlighted || isBestValue ? 'bg-gold text-black' : 'bg-gray-800 text-gray-400'
                     }`}>
                       {plan.tag}
                     </span>
                     <div className="text-right">
                       {currency === 'GHS' ? (
                         <>
-                          <p className="text-[#ffd700] font-bold text-lg">GHS {plan.priceGhs}</p>
+                          <p className="text-gold font-bold text-lg">GHS {plan.priceGhs}</p>
                           <p className="text-gray-400 text-[10px] font-mono">~ ${plan.priceUsd} USD</p>
                         </>
                       ) : (
                         <>
-                          <p className="text-[#ffd700] font-bold text-lg">${plan.priceUsd} USD</p>
+                          <p className="text-gold font-bold text-lg">${plan.priceUsd} USD</p>
                           <p className="text-gray-400 text-[10px] font-mono">~ GHS {plan.priceGhs}</p>
                         </>
                       )}
@@ -1136,14 +1136,14 @@ export function GhanaPlansScreen({
 
                   <h3 className="font-display text-base font-extrabold text-white mb-1 tracking-tight leading-snug">{plan.name}</h3>
                   
-                  <div className="flex items-center gap-1 text-[10.5px] font-mono text-[#ffd700] mb-4 font-semibold uppercase">
+                  <div className="flex items-center gap-1 text-[10.5px] font-mono text-gold mb-4 font-semibold uppercase">
                     <span className="material-symbols-outlined text-xs">signal_cellular_alt</span>
                     <span>{plan.speed}</span>
                   </div>
 
                   <div className="space-y-2.5 mb-6 text-xs text-gray-300 border-t border-gray-900 pt-3">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#ffd700] bg-[#ffd700]/5 p-1.5 rounded text-xs select-none">database</span>
+                      <span className="material-symbols-outlined text-gold bg-gold/5 p-1.5 rounded text-xs select-none">database</span>
                       <div>
                         <p className="font-bold text-white">{plan.dataGb}</p>
                         <p className="text-[9.5px] text-gray-500 font-mono">High-Speed Downlink Cap</p>
@@ -1151,7 +1151,7 @@ export function GhanaPlansScreen({
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#ffd700] bg-[#ffd700]/5 p-1.5 rounded text-xs select-none">calendar_today</span>
+                      <span className="material-symbols-outlined text-gold bg-gold/5 p-1.5 rounded text-xs select-none">calendar_today</span>
                       <div>
                         <p className="font-bold text-white">{plan.validityDays} {plan.validityDays === 1 ? 'Day' : 'Days'}</p>
                         <p className="text-[9.5px] text-gray-500 font-mono">Validity Limit</p>
@@ -1159,8 +1159,8 @@ export function GhanaPlansScreen({
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <span className="material-symbols-outlined text-[#ffd700] bg-[#ffd700]/5 p-1.5 rounded text-xs select-none mt-0.5">{plan.culturalInsightSymbolName}</span>
-                      <div className="flex-grow">
+                      <span className="material-symbols-outlined text-gold bg-gold/5 p-1.5 rounded text-xs select-none mt-0.5">{plan.culturalInsightSymbolName}</span>
+                      <div className="grow">
                         <p className="font-bold text-white text-[11px] leading-tight">{plan.culturalInsightTitle}</p>
                         <p className="text-[10px] text-gray-400 leading-normal mt-0.5 italic">{plan.culturalInsightDesc}</p>
                       </div>
@@ -1173,7 +1173,7 @@ export function GhanaPlansScreen({
                     onSelectPlan(plan);
                     onNavigate(ScreenId.CHECKOUT, 'push');
                   }}
-                  className="w-full bg-[#ffd700] hover:bg-[#e6c200] text-black py-2.5 rounded-lg font-display text-xs font-bold active:scale-95 transition-all cursor-pointer shadow-md shadow-[#ffd700]/5 text-center block uppercase tracking-wider font-extrabold mt-4"
+                  className="w-full bg-gold hover:bg-gold-hover text-black py-2.5 rounded-lg font-display text-xs font-bold active:scale-95 transition-all cursor-pointer shadow-md shadow-gold/5 text-center block uppercase tracking-wider mt-4"
                 >
                   Activate Now
                 </button>
@@ -1262,11 +1262,11 @@ export function CheckoutScreen({
       <div className="flex items-center justify-between">
         <button 
           onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'push_back')}
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-[#201f1f] hover:bg-[#2a2a2a] border border-[#4d4732]/30 text-white cursor-pointer"
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-clay hover:bg-clay-high border border-[#4d4732]/30 text-white cursor-pointer"
         >
           <span className="material-symbols-outlined select-none text-base">arrow_back</span>
         </button>
-        <span className="font-display text-xs font-extrabold tracking-wider text-[#ffd700]">SECURE CHECKOUT</span>
+        <span className="font-display text-xs font-extrabold tracking-wider text-gold">SECURE CHECKOUT</span>
         <div className="w-8"></div>
       </div>
 
@@ -1276,30 +1276,30 @@ export function CheckoutScreen({
       </div>
 
       {/* Plan Card Detail */}
-      <div className="glass-panel rounded-xl p-5 relative overflow-hidden border-2 border-[#ffd700]/15 bg-gradient-to-br from-[#1c1b1b]/50 to-black/30">
-        <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#ffd700]/5 rounded-full blur-xl"></div>
+      <div className="glass-panel rounded-xl p-5 relative overflow-hidden border-2 border-gold/15 bg-linear-to-br from-[#1c1b1b]/50 to-black/30">
+        <div className="absolute -top-8 -right-8 w-24 h-24 bg-gold/5 rounded-full blur-xl"></div>
         
         <div className="flex justify-between items-start mb-6">
           <div>
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#891d11]/30 border border-[#891d11] text-xs font-mono font-medium text-red-400 mb-2">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-terracotta-dark/30 border border-terracotta-dark text-xs font-mono font-medium text-red-400 mb-2">
               PREMIUM TIER
             </span>
             <h3 className="font-display text-lg font-bold text-white">{finalPlan.name}</h3>
           </div>
           <div className="text-right">
-            <p className="text-[#ffd700] text-xl font-bold">GHS {finalPlan.priceGhs}</p>
+            <p className="text-gold text-xl font-bold">GHS {finalPlan.priceGhs}</p>
             <p className="text-gray-400 text-xs font-mono">~ ${finalPlan.priceUsd} USD</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-[#1c1b1b]/60 rounded-xl p-3 border border-[#4d4732]/20 flex flex-col items-center justify-center text-center">
-            <span className="material-symbols-outlined text-[#ffd700] text-xl mb-1">database</span>
+            <span className="material-symbols-outlined text-gold text-xl mb-1">database</span>
             <span className="font-display font-black text-white text-base">{finalPlan.dataGb}</span>
             <span className="text-[9px] font-mono text-gray-500 mt-0.5">High-Speed Roaming</span>
           </div>
           <div className="bg-[#1c1b1b]/60 rounded-xl p-3 border border-[#4d4732]/20 flex flex-col items-center justify-center text-center">
-            <span className="material-symbols-outlined text-[#ffd700] text-xl mb-1">calendar_month</span>
+            <span className="material-symbols-outlined text-gold text-xl mb-1">calendar_month</span>
             <span className="font-display font-black text-white text-base">{finalPlan.validityDays} Days</span>
             <span className="text-[9px] font-mono text-gray-500 mt-0.5">Validity Term</span>
           </div>
@@ -1309,25 +1309,25 @@ export function CheckoutScreen({
       {/* Specs Bento Style Grid */}
       <div className="grid grid-cols-3 gap-3">
         <div className="glass-panel rounded-lg py-3 flex flex-col items-center justify-center text-center">
-          <span className="material-symbols-outlined text-[#cc4e3c] text-lg mb-1">cell_tower</span>
+          <span className="material-symbols-outlined text-terracotta text-lg mb-1">cell_tower</span>
           <span className="font-mono text-[10px] text-gray-300 font-semibold uppercase">{finalPlan.speed}</span>
         </div>
         <div className="glass-panel rounded-lg py-3 flex flex-col items-center justify-center text-center">
-          <span className="material-symbols-outlined text-[#cc4e3c] text-lg mb-1">support_agent</span>
+          <span className="material-symbols-outlined text-terracotta text-lg mb-1">support_agent</span>
           <span className="font-mono text-[10px] text-gray-300 font-semibold uppercase">24/7 Priority Support</span>
         </div>
         <div className="glass-panel rounded-lg py-3 flex flex-col items-center justify-center text-center">
-          <span className="material-symbols-outlined text-[#cc4e3c] text-lg mb-1">bolt</span>
+          <span className="material-symbols-outlined text-terracotta text-lg mb-1">bolt</span>
           <span className="font-mono text-[10px] text-gray-300 font-semibold uppercase">Instant Setup</span>
         </div>
       </div>
 
       {/* Real-time Paystack Interactive Feedback Box */}
       {reference && (
-        <div className="glass-panel rounded-xl p-5 border border-[#ffd700]/30 space-y-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+        <div className="glass-panel rounded-xl p-5 border border-gold/30 space-y-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
           <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 bg-[#ffd700] rounded-full animate-ping shrink-0" />
-            <h4 className="font-display font-bold text-[#ffd700] text-sm">Paystack Secure Gateway Active</h4>
+            <span className="w-2.5 h-2.5 bg-gold rounded-full animate-ping shrink-0" />
+            <h4 className="font-display font-bold text-gold text-sm">Paystack Secure Gateway Active</h4>
           </div>
           <p className="text-gray-300 text-xs leading-relaxed">
             A secure Paystack sandbox payment screen was opened in a new tab to complete your test transaction of <span className="font-bold text-white">GHS {finalPlan.priceGhs}</span>.
@@ -1336,7 +1336,7 @@ export function CheckoutScreen({
           <div className="flex flex-col sm:flex-row gap-2.5 pt-1.5">
             <button
               onClick={() => window.open(paymentUrl || "", '_blank')}
-              className="flex-1 py-3 rounded-xl border border-[#ffd700]/25 hover:border-[#ffd700] text-[#ffd700] bg-black/40 text-xs font-mono font-bold hover:bg-black/60 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="flex-1 py-3 rounded-xl border border-gold/25 hover:border-gold text-gold bg-black/40 text-xs font-mono font-bold hover:bg-black/60 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-xs">open_in_new</span>
               <span>Reopen Portal Window</span>
@@ -1344,7 +1344,7 @@ export function CheckoutScreen({
             <button
               onClick={verifyPayment}
               disabled={isVerifying}
-              className="flex-1 py-3 rounded-xl bg-[#ffd700] hover:bg-[#ffe033] text-black text-xs font-mono font-black tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-3 rounded-xl bg-gold hover:bg-[#ffe033] text-black text-xs font-mono font-black tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {isVerifying ? (
                 <>
@@ -1370,25 +1370,25 @@ export function CheckoutScreen({
       )}
 
       {/* Cultural Card Insight */}
-      <div className="glass-panel rounded-xl p-4 flex gap-4 border-l-2 border-l-[#ffd700] bg-black/20">
-        <div className="w-10 h-10 rounded-full bg-[#ffd700]/10 flex items-center justify-center text-[#ffd700] shrink-0">
+      <div className="glass-panel rounded-xl p-4 flex gap-4 border-l-2 border-l-gold bg-black/20">
+        <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold shrink-0">
           <span className="material-symbols-outlined text-lg">{finalPlan.culturalInsightSymbolName}</span>
         </div>
         <div className="space-y-1">
-          <p className="font-mono text-[10px] uppercase text-[#ffd700] tracking-wider font-semibold">CULTURAL INSIGHT</p>
+          <p className="font-mono text-[10px] uppercase text-gold tracking-wider font-semibold">CULTURAL INSIGHT</p>
           <h4 className="font-display text-sm font-bold text-white">{finalPlan.culturalInsightTitle}</h4>
           <p className="text-gray-400 text-xs leading-relaxed">{finalPlan.culturalInsightDesc}</p>
         </div>
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-[#131313]/95 border-t border-[#4d4732]/30 flex flex-col items-center gap-2 z-40">
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-surface-dim/95 border-t border-[#4d4732]/30 flex flex-col items-center gap-2 z-40">
         <div className="w-full max-w-md flex flex-col items-center">
           {!reference ? (
             <button 
               onClick={startPaystackPayment}
               disabled={isInitializing}
-              className="w-full bg-[#ffd700] hover:bg-[#ffe033] text-black font-semibold font-display py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full bg-gold hover:bg-[#ffe033] text-black font-semibold font-display py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isInitializing ? (
                 <>
@@ -1406,7 +1406,7 @@ export function CheckoutScreen({
             <button 
               onClick={verifyPayment}
               disabled={isVerifying}
-              className="w-full bg-[#ffd700] hover:bg-[#ffe033] text-black font-semibold font-display py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full bg-gold hover:bg-[#ffe033] text-black font-semibold font-display py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isVerifying ? (
                 <>
@@ -1422,7 +1422,7 @@ export function CheckoutScreen({
             </button>
           )}
           <p className="text-gray-500 font-mono text-[9px] mt-2 flex items-center gap-1 uppercase select-none tracking-widest">
-            <span className="material-symbols-outlined text-xs text-[#ffd700]">lock</span>
+            <span className="material-symbols-outlined text-xs text-gold">lock</span>
             <span>Encrypted & Secure checkout powered by Paystack</span>
           </p>
         </div>
@@ -1511,17 +1511,17 @@ export function ActivateEsimScreen({
     <div className="anim-push px-4 sm:px-6 max-w-2xl mx-auto py-6 space-y-6">
       <div className="text-center space-y-1">
         {isActivated ? (
-          <span className="bg-[#006b3f]/25 text-[#94ecb4] px-3.5 py-1 rounded-full text-xs font-mono border border-[#006b3f]/40 animate-pulse tracking-wide inline-flex items-center gap-1.5 shadow-lg shadow-[#006b3f]/10">
-            <span className="w-2 h-2 bg-[#94ecb4] rounded-full"></span>
+          <span className="bg-ghana-green/25 text-green-light px-3.5 py-1 rounded-full text-xs font-mono border border-ghana-green/40 animate-pulse tracking-wide inline-flex items-center gap-1.5 shadow-lg shadow-ghana-green/10">
+            <span className="w-2 h-2 bg-green-light rounded-full"></span>
             ESIM ACTIVATED & READY
           </span>
         ) : isActivating ? (
-          <span className="bg-[#ffd700]/10 text-[#ffd700] px-3 py-1 rounded-full text-xs font-mono border border-[#ffd700]/20 animate-pulse inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-[#ffd700] rounded-full animate-ping"></span>
+          <span className="bg-gold/10 text-gold px-3 py-1 rounded-full text-xs font-mono border border-gold/20 animate-pulse inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-gold rounded-full animate-ping"></span>
             CONNECTING TO KOTOKA GATEWAY...
           </span>
         ) : (
-          <span className="bg-[#cc4e3c]/15 text-red-300 px-3 py-1 rounded-full text-xs font-mono border border-[#cc4e3c]/30">
+          <span className="bg-terracotta/15 text-red-300 px-3 py-1 rounded-full text-xs font-mono border border-terracotta/30">
             AWAITING SIM REGISTRATION
           </span>
         )}
@@ -1537,16 +1537,16 @@ export function ActivateEsimScreen({
 
       {/* Main interactive segment */}
       <div className={`glass-panel rounded-2xl p-6 flex flex-col items-center text-center space-y-5 transition-all duration-500 ${
-        isActivated ? 'glow-active-gold border-[#ffd700]/30 bg-black/60' : 'border-[#4d4732]/25'
+        isActivated ? 'glow-active-gold border-gold/30 bg-black/60' : 'border-[#4d4732]/25'
       }`}>
         {/* Toggle between QR Scan and Manual Guide */}
         {!isActivated && !isActivating && (
-          <div className="flex w-full bg-black/40 p-1 rounded-xl border border-[#ffd700]/15 mb-2">
+          <div className="flex w-full bg-black/40 p-1 rounded-xl border border-gold/15 mb-2">
             <button
               onClick={() => setSetupMode('qr')}
               className={`flex-1 py-2.5 rounded-lg font-display text-xs font-bold transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
                 setupMode === 'qr'
-                  ? 'bg-[#ffd700] text-black shadow-md font-black'
+                  ? 'bg-gold text-black shadow-md font-black'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -1557,7 +1557,7 @@ export function ActivateEsimScreen({
               onClick={() => setSetupMode('manual')}
               className={`flex-1 py-2.5 rounded-lg font-display text-xs font-bold transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
                 setupMode === 'manual'
-                  ? 'bg-[#ffd700] text-black shadow-md font-black'
+                  ? 'bg-gold text-black shadow-md font-black'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -1572,16 +1572,16 @@ export function ActivateEsimScreen({
           <div className="py-12 px-4 space-y-6 w-full flex flex-col items-center justify-center">
             <div className="relative w-16 h-16 flex items-center justify-center">
               {/* Rotating outer loader */}
-              <div className="absolute inset-0 rounded-full border-4 border-gray-800 border-t-[#ffd700] animate-spin"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-gray-800 border-t-gold animate-spin"></div>
               {/* Pulsing inner dot */}
-              <span className="material-symbols-outlined text-[#ffd700] text-3xl animate-pulse">settings_ethernet</span>
+              <span className="material-symbols-outlined text-gold text-3xl animate-pulse">settings_ethernet</span>
             </div>
             
             <div className="space-y-1.5 max-w-sm">
-              <p className="text-[#ffd700] text-xs font-mono font-bold uppercase tracking-wider">Deploying Profile...</p>
+              <p className="text-gold text-xs font-mono font-bold uppercase tracking-wider">Deploying Profile...</p>
               <div className="h-1 w-48 bg-gray-900 rounded-full overflow-hidden mx-auto">
                 <div 
-                  className="h-full bg-linear-to-r from-[#ffd700] to-[#ffd700]/60 transition-all duration-300 rounded-full" 
+                  className="h-full bg-linear-to-r from-gold to-gold/60 transition-all duration-300 rounded-full" 
                   style={{ width: `${((activeStep + 1) / activationSteps.length) * 100}%` }}
                 ></div>
               </div>
@@ -1594,8 +1594,8 @@ export function ActivateEsimScreen({
           /* Showstopping Success Animation Frame */
           <div className="animate-scale-up-success py-4 flex flex-col items-center space-y-5 w-full">
             {/* Glowing gold circular checkmark */}
-            <div className="relative w-20 h-20 rounded-full bg-[#ffd700] flex items-center justify-center text-black shrink-0 shadow-lg shadow-[#ffd700]/25 animate-bounce">
-              <div className="absolute -inset-2 rounded-full border-2 border-dashed border-[#ffd700]/35 animate-spin"></div>
+            <div className="relative w-20 h-20 rounded-full bg-gold flex items-center justify-center text-black shrink-0 shadow-lg shadow-gold/25 animate-bounce">
+              <div className="absolute -inset-2 rounded-full border-2 border-dashed border-gold/35 animate-spin"></div>
               <span className="material-symbols-outlined text-4xl font-bold">check_circle</span>
             </div>
 
@@ -1609,16 +1609,16 @@ export function ActivateEsimScreen({
               </p>
             </div>
 
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-[#ffd700]/15 to-transparent my-1"></div>
+            <div className="w-full h-px bg-linear-to-r from-transparent via-gold/15 to-transparent my-1"></div>
 
             {/* Virtual eSIM card illustration */}
-            <div className="glass-panel-heavy rounded-xl p-4 border border-[#ffd700]/20 w-full max-w-xs text-left relative overflow-hidden flex flex-col justify-between h-36">
+            <div className="glass-panel-heavy rounded-xl p-4 border border-gold/20 w-full max-w-xs text-left relative overflow-hidden flex flex-col justify-between h-36">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] text-[#ffd700] font-mono font-bold tracking-widest uppercase">SIMFINITY eSIM</p>
+                  <p className="text-[10px] text-gold font-mono font-bold tracking-widest uppercase">SIMFINITY eSIM</p>
                   <p className="text-white font-display text-sm font-extrabold">{plan.name}</p>
                 </div>
-                <span className="material-symbols-outlined text-[#ffd700] text-3xl opacity-75">sim_card</span>
+                <span className="material-symbols-outlined text-gold text-3xl opacity-75">sim_card</span>
               </div>
               
               <div className="flex justify-between items-end font-mono">
@@ -1638,14 +1638,14 @@ export function ActivateEsimScreen({
               <button
                 onClick={handlePingTest}
                 disabled={isPinging}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gray-950 border border-gray-800 hover:border-[#ffd700]/30 rounded-lg text-[11px] font-mono font-bold text-gray-300 hover:text-white transition duration-200 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gray-950 border border-gray-800 hover:border-gold/30 rounded-lg text-[11px] font-mono font-bold text-gray-300 hover:text-white transition duration-200 cursor-pointer disabled:opacity-50"
               >
-                <span className={`material-symbols-outlined text-[12px] text-[#ffd700] ${isPinging ? 'animate-spin' : ''}`}>network_ping</span>
+                <span className={`material-symbols-outlined text-[12px] text-gold ${isPinging ? 'animate-spin' : ''}`}>network_ping</span>
                 <span>{isPinging ? 'Testing Port...' : 'Test Simfinity Connection Speed'}</span>
               </button>
 
               {pingResult && (
-                <p className="text-[10px] font-mono text-[#94ecb4] bg-[#006b3f]/15 border border-[#006b3f]/20 py-1.5 px-3 rounded-lg animate-fade">
+                <p className="text-[10px] font-mono text-green-light bg-ghana-green/15 border border-ghana-green/20 py-1.5 px-3 rounded-lg animate-fade">
                   {pingResult}
                 </p>
               )}
@@ -1681,7 +1681,7 @@ export function ActivateEsimScreen({
                   </div>
                 )}
                 {/* Red scan guideline overlay */}
-                <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-red-500/80 animate-pulse shadow-md"></div>
+                <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-red-500/80 animate-pulse shadow-md"></div>
               </div>
             </div>
 
@@ -1692,7 +1692,7 @@ export function ActivateEsimScreen({
             {/* Instant simulated scanner trigger */}
             <button
               onClick={handleActivate}
-              className="px-6 py-2.5 bg-[#ffd700] hover:bg-[#e6c200] text-black font-display font-extrabold text-xs rounded-xl active:scale-95 duration-100 transition shadow-md shadow-[#ffd700]/10 flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-2.5 bg-gold hover:bg-gold-hover text-black font-display font-extrabold text-xs rounded-xl active:scale-95 duration-100 transition shadow-md shadow-gold/10 flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm font-bold">qr_code_scanner</span>
               <span>SIMULATE QR SCAN & REGISTER LINE</span>
@@ -1701,7 +1701,7 @@ export function ActivateEsimScreen({
             <div className="w-full kente-divider"></div>
 
             {/* Manual Setup config values */}
-            <div className="w-full text-left space-y-2 font-mono text-xs text-gray-300 bg-[#1c1b1b]/70 p-4 rounded-xl border border-[#ffd700]/10 animate-fade-in">
+            <div className="w-full text-left space-y-2 font-mono text-xs text-gray-300 bg-[#1c1b1b]/70 p-4 rounded-xl border border-gold/10 animate-fade-in">
               <div className="flex justify-between items-center text-gray-500 font-bold uppercase text-[9px] pb-1">
                 <span>Manual details</span>
                 <span>ICCID: {provisionedEsim?.iccid || "89233010472910482937"}</span>
@@ -1709,20 +1709,20 @@ export function ActivateEsimScreen({
               <div className="flex justify-between items-center bg-black/30 p-2 rounded">
                 <div>
                   <span className="text-gray-500">SM-DP+ SITE:</span>{' '}
-                  <span className="text-[#ffd700] text-[11px]">{provisionedEsim?.smdpAddress || "rsp.simfinity.com"}</span>
+                  <span className="text-gold text-[11px]">{provisionedEsim?.smdpAddress || "rsp.simfinity.com"}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center bg-black/30 p-2 rounded">
                 <div>
                   <span className="text-gray-500">ACTIVATION CODE:</span>{' '}
-                  <span className="text-[#ffd700] text-[11px]">{provisionedEsim?.activationCode || "LXT-99327-SIMFINITY"}</span>
+                  <span className="text-gold text-[11px]">{provisionedEsim?.activationCode || "LXT-99327-SIMFINITY"}</span>
                 </div>
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(provisionedEsim?.activationCode || "LXT-99327-SIMFINITY");
                     simulateCopy();
                   }}
-                  className="text-[#ffd700] hover:text-white transition font-bold text-[11px]"
+                  className="text-gold hover:text-white transition font-bold text-[11px]"
                 >
                   {copiedCode ? 'Copied' : 'Copy'}
                 </button>
@@ -1761,44 +1761,44 @@ export function ActivateEsimScreen({
             {/* Step-by-step instructions list */}
             <div className="w-full text-left space-y-3.5 bg-black/30 p-5 rounded-xl border border-[#4d4732]/25">
               <h3 className="font-display font-black text-xs text-white uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-xs text-[#ffd700]">cell_tower</span>
+                <span className="material-symbols-outlined text-xs text-gold">cell_tower</span>
                 <span>Manual Activation Steps für {devicePlatform === 'ios' ? 'iOS Devices' : 'Android Devices'}</span>
               </h3>
 
               {devicePlatform === 'ios' ? (
                 <ol className="space-y-3 font-sans text-xs text-gray-300">
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">1</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">1</span>
                     <p className="leading-relaxed">
                       Go to your phone’s <span className="font-bold text-white">Settings</span> page and tap <span className="font-bold text-white">Cellular</span> (or <span className="font-bold text-white">Mobile Data</span>).
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">2</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">2</span>
                     <p className="leading-relaxed">
                       Tap <span className="font-bold text-white">Add eSIM</span> or <span className="font-bold text-white">Add Data Plan</span>.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">3</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">3</span>
                     <p className="leading-relaxed">
-                      At the bottom of the system set up screen, tap <span className="font-bold text-[#ffd700]">Use QR Code</span>.
+                      At the bottom of the system set up screen, tap <span className="font-bold text-gold">Use QR Code</span>.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">4</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">4</span>
                     <p className="leading-relaxed">
-                      On the camera scanner overlay, tap <span className="font-bold text-[#ffd700]">Enter Details Manually</span> at the bottom.
+                      On the camera scanner overlay, tap <span className="font-bold text-gold">Enter Details Manually</span> at the bottom.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">5</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">5</span>
                     <p className="leading-relaxed">
-                      Copy and paste the <span className="font-bold text-[#ffd700]">SM-DP+ Site Address</span> and the unique <span className="font-bold text-[#ffd700]">Activation Code</span> from the details card below. Custom SM-DP site activation fields are 100% case sensitive.
+                      Copy and paste the <span className="font-bold text-gold">SM-DP+ Site Address</span> and the unique <span className="font-bold text-gold">Activation Code</span> from the details card below. Custom SM-DP site activation fields are 100% case sensitive.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">6</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">6</span>
                     <p className="leading-relaxed">
                       Follow the prompts to register. We recommend naming the secondary line label <span className="font-bold text-white">"Simfinity eSIM"</span> so you can switch your active data seamlessly upon landing.
                     </p>
@@ -1807,37 +1807,37 @@ export function ActivateEsimScreen({
               ) : (
                 <ol className="space-y-3 font-sans text-xs text-gray-300">
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">1</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">1</span>
                     <p className="leading-relaxed">
                       Navigate to your phone’s <span className="font-bold text-white">Settings</span> menu and select <span className="font-bold text-white">Network & internet</span> (or <span className="font-bold text-white">Connections</span> &gt; <span className="font-bold text-white">SIM manager</span>).
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">2</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">2</span>
                     <p className="leading-relaxed">
                       Tap <span className="font-bold text-white">SIMs</span> (<span className="font-bold text-white font-mono">+</span> icon) representing "Add SIM" or <span className="font-bold text-white">Add mobile plan</span>.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">3</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">3</span>
                     <p className="leading-relaxed">
                       Select <span className="font-bold text-white">Download a SIM instead?</span> (for vanilla Android) or download cellular configurations.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">4</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">4</span>
                     <p className="leading-relaxed">
-                      When the QR scanner overlay opens, click <span className="font-bold text-[#ffd700]">Need help?</span> or <span className="font-bold text-[#ffd700]">Enter manually</span> situated at the bottom of target screen.
+                      When the QR scanner overlay opens, click <span className="font-bold text-gold">Need help?</span> or <span className="font-bold text-gold">Enter manually</span> situated at the bottom of target screen.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">5</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">5</span>
                     <p className="leading-relaxed">
-                      Input the <span className="font-bold text-[#ffd700]">SM-DP+ Site Address</span> and <span className="font-bold text-[#ffd700]">Activation Code</span> specified in the details card below. Leave the confirmation code field blank unless instructed.
+                      Input the <span className="font-bold text-gold">SM-DP+ Site Address</span> and <span className="font-bold text-gold">Activation Code</span> specified in the details card below. Leave the confirmation code field blank unless instructed.
                     </p>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-full text-[10px] text-[#ffd700] font-black font-mono shrink-0 mt-0.5">6</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gold/10 border border-gold/30 rounded-full text-[10px] text-gold font-black font-mono shrink-0 mt-0.5">6</span>
                     <p className="leading-relaxed">
                       Download the SIM profile onto your secure chip. Set the profile name to <span className="font-bold text-white">"Simfinity eSIM"</span> to easily manage your mobile data routes.
                     </p>
@@ -1848,13 +1848,13 @@ export function ActivateEsimScreen({
               <div className="w-full h-px bg-white/5 my-2"></div>
 
               {/* Instant Verification/Demonstration Trigger */}
-              <div className="bg-black/20 p-3 rounded-lg border border-[#ffd700]/10 space-y-2">
+              <div className="bg-black/20 p-3 rounded-lg border border-gold/10 space-y-2">
                 <p className="text-[10px] text-gray-400 font-sans leading-relaxed">
                   Have you successfully saved the profile using the credentials below? Click the register button to run the cellular handshake simulation.
                 </p>
                 <button
                   onClick={handleActivate}
-                  className="w-full py-2.5 bg-[#ffd700] hover:bg-[#e6c200] text-black font-display font-extrabold text-xs rounded-lg active:scale-95 duration-100 transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-2.5 bg-gold hover:bg-gold-hover text-black font-display font-extrabold text-xs rounded-lg active:scale-95 duration-100 transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm font-black">lock_open</span>
                   <span>CONFIRM MANUAL SETUP & ONLINE BOOT</span>
@@ -1863,7 +1863,7 @@ export function ActivateEsimScreen({
             </div>
 
             {/* Manual details card specifically styled inside the guide */}
-            <div className="w-full text-left space-y-2 font-mono text-xs text-gray-300 bg-[#1c1b1b]/70 p-4 rounded-xl border border-dashed border-[#ffd700]/30">
+            <div className="w-full text-left space-y-2 font-mono text-xs text-gray-300 bg-[#1c1b1b]/70 p-4 rounded-xl border border-dashed border-gold/30">
               <div className="flex justify-between items-center text-gray-400 font-bold uppercase text-[9px] pb-1 border-b border-white/5">
                 <span>Credentials For Easy Copying</span>
                 <span>ICCID: {provisionedEsim?.iccid || "89233010472910482937"}</span>
@@ -1872,14 +1872,14 @@ export function ActivateEsimScreen({
               <div className="flex justify-between items-center bg-black/30 p-2.5 rounded border border-white/5">
                 <div>
                   <span className="text-gray-500 font-bold block text-[9px]">SM-DP+ SITE ADDRESS:</span>
-                  <span className="text-[#ffd700] text-xs font-bold font-mono select-all block mt-0.5">{provisionedEsim?.smdpAddress || "rsp.simfinity.com"}</span>
+                  <span className="text-gold text-xs font-bold font-mono select-all block mt-0.5">{provisionedEsim?.smdpAddress || "rsp.simfinity.com"}</span>
                 </div>
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(provisionedEsim?.smdpAddress || "rsp.simfinity.com");
                     simulateSmdpCopy();
                   }}
-                  className="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-[#ffd700] hover:text-white transition font-bold font-sans text-[10px]"
+                  className="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-gold hover:text-white transition font-bold font-sans text-[10px]"
                 >
                   {copiedSmdp ? 'Copied' : 'Copy'}
                 </button>
@@ -1888,14 +1888,14 @@ export function ActivateEsimScreen({
               <div className="flex justify-between items-center bg-black/30 p-2.5 rounded border border-white/5">
                 <div>
                   <span className="text-gray-500 font-bold block text-[9px]">ACTIVATION CODE:</span>
-                  <span className="text-[#ffd700] text-xs font-bold font-mono select-all block mt-0.5">{provisionedEsim?.activationCode || "LXT-99327-SIMFINITY"}</span>
+                  <span className="text-gold text-xs font-bold font-mono select-all block mt-0.5">{provisionedEsim?.activationCode || "LXT-99327-SIMFINITY"}</span>
                 </div>
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(provisionedEsim?.activationCode || "LXT-99327-SIMFINITY");
                     simulateCopy();
                   }}
-                  className="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-[#ffd700] hover:text-white transition font-bold font-sans text-[10px]"
+                  className="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-gold hover:text-white transition font-bold font-sans text-[10px]"
                 >
                   {copiedCode ? 'Copied' : 'Copy'}
                 </button>
@@ -1907,7 +1907,7 @@ export function ActivateEsimScreen({
 
       {/* Guide notes */}
       <div className="glass-panel rounded-xl p-4 flex gap-4 text-xs text-gray-400">
-        <span className="material-symbols-outlined text-[#ffd700] select-none shrink-0">info</span>
+        <span className="material-symbols-outlined text-gold select-none shrink-0">info</span>
         <div>
           <h4 className="font-bold text-white mb-0.5">Setup Recommendation:</h4>
           <p className="leading-relaxed">
@@ -1930,7 +1930,7 @@ export function ActivateEsimScreen({
         )}
         <button 
           onClick={() => onNavigate(ScreenId.MY_ESIMS, 'none')}
-          className="px-8 py-3 bg-[#ffd700] hover:bg-[#e6c200] text-black font-semibold font-display text-sm rounded-xl active:scale-95 transition shadow-lg shadow-[#ffd700]/10 cursor-pointer"
+          className="px-8 py-3 bg-gold hover:bg-gold-hover text-black font-semibold font-display text-sm rounded-xl active:scale-95 transition shadow-lg shadow-gold/10 cursor-pointer"
         >
           Go to My eSIMs
         </button>
@@ -1971,18 +1971,18 @@ export function MyEsimsScreen({
     <div className="anim-fade px-4 sm:px-6 max-w-4xl mx-auto py-6 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="font-display text-2xl font-bold text-[#ffd700]">Manoa's Dashboard</h2>
+          <h2 className="font-display text-2xl font-bold text-gold">Manoa's Dashboard</h2>
           <p className="text-gray-400 text-xs sm:text-sm mt-0.5">Manage your global connectivity network accounts.</p>
           
-          <div className="inline-flex mt-2 items-center gap-1.5 px-3 py-1 rounded-full bg-[#006b3f]/20 border border-[#006b3f]/30 text-[#94ecb4] text-xs font-mono">
-            <span className="w-1.5 h-1.5 bg-[#94ecb4] rounded-full animate-pulse"></span>
+          <div className="inline-flex mt-2 items-center gap-1.5 px-3 py-1 rounded-full bg-ghana-green/20 border border-ghana-green/30 text-green-light text-xs font-mono">
+            <span className="w-1.5 h-1.5 bg-green-light rounded-full animate-pulse"></span>
             <span>SIMFINITY ACTIVE ACTIVE</span>
           </div>
         </div>
         <button
           disabled={isLoading}
           onClick={handleRefresh}
-          className={`w-9 h-9 rounded-full bg-gray-900 border border-gray-800 text-[#ffd700] flex items-center justify-center transition hover:border-[#ffd700]/30 hover:bg-gray-800 active:scale-95 ${
+          className={`w-9 h-9 rounded-full bg-gray-900 border border-gray-800 text-gold flex items-center justify-center transition hover:border-gold/30 hover:bg-gray-800 active:scale-95 ${
             isLoading ? 'animate-spin opacity-50 cursor-not-allowed' : 'cursor-pointer'
           }`}
           title="Refresh Dashboard Data"
@@ -2004,7 +2004,7 @@ export function MyEsimsScreen({
         <section className="space-y-6 relative">
           
           {/* Div 1: Add New eSIM (xpath expects: body/main[1]/section[2]/div[1]/button[1]) */}
-          <div className="glass-panel rounded-2xl p-5 border border-[#ffd700]/10 text-center flex flex-col items-center justify-center space-y-3 relative">
+          <div className="glass-panel rounded-2xl p-5 border border-gold/10 text-center flex flex-col items-center justify-center space-y-3 relative">
             <div className="w-11 h-11 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 border border-gray-700 select-none">
               <span className="material-symbols-outlined">add</span>
             </div>
@@ -2015,7 +2015,7 @@ export function MyEsimsScreen({
             {/* Button 2: Add New eSIM trigger (Index 1) */}
             <button 
               onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'none')}
-              className="bg-transparent hover:bg-[#ffd700] hover:text-black text-[#ffd700] font-mono text-xs font-bold border border-[#ffd700]/30 hover:border-transparent px-4 py-2 rounded transition cursor-pointer"
+              className="bg-transparent hover:bg-gold hover:text-black text-gold font-mono text-xs font-bold border border-gold/30 hover:border-transparent px-4 py-2 rounded transition cursor-pointer"
             >
               BROWSE PLANS
             </button>
@@ -2030,10 +2030,10 @@ export function MyEsimsScreen({
               Array.from({ length: Math.max(1, activeEsims.length) }).map((_, idx) => (
                 <div 
                   key={idx}
-                  className="glass-panel rounded-xl p-5 space-y-4 border-l-2 border-l-[#ffd700]/30 animate-pulse"
+                  className="glass-panel rounded-xl p-5 space-y-4 border-l-2 border-l-gold/30 animate-pulse"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="space-y-1.5 flex-grow">
+                    <div className="space-y-1.5 grow">
                       <div className="h-4 bg-gray-800 rounded w-1/3"></div>
                       <div className="h-3 bg-gray-900 rounded w-1/4"></div>
                     </div>
@@ -2049,7 +2049,7 @@ export function MyEsimsScreen({
                       </div>
                     </div>
 
-                    <div className="space-y-4 flex-grow w-full">
+                    <div className="space-y-4 grow w-full">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <div className="h-3 bg-gray-900 rounded w-1/2"></div>
@@ -2082,14 +2082,14 @@ export function MyEsimsScreen({
               activeEsims.map((esim) => (
                 <div 
                   key={esim.id}
-                  className="glass-panel rounded-xl p-5 space-y-4 border-l-2 border-l-[#ffd700]"
+                  className="glass-panel rounded-xl p-5 space-y-4 border-l-2 border-l-gold"
                 >
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-display text-sm font-bold text-white">{esim.planName}</h4>
                       <p className="text-gray-400 font-mono text-[10px] tracking-wide mt-0.5">ID: {esim.id}</p>
                     </div>
-                    <span className="bg-[#ffd700] text-black font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full select-none shadow">
+                    <span className="bg-gold text-black font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full select-none shadow">
                       5G Active
                     </span>
                   </div>
@@ -2137,7 +2137,7 @@ export function MyEsimsScreen({
                               </Pie>
                             </PieChart>
                             <div className="absolute text-center flex flex-col items-center justify-center">
-                              <p className="text-[10px] font-mono uppercase text-[#ffd700] leading-none mb-0.5">LEFT</p>
+                              <p className="text-[10px] font-mono uppercase text-gold leading-none mb-0.5">LEFT</p>
                               <p className="font-display font-black text-white text-lg leading-none">
                                 {isUnlimited ? '∞' : esim.leftDataGb}
                               </p>
@@ -2150,7 +2150,7 @@ export function MyEsimsScreen({
                       })()}
                     </div>
 
-                    <div className="space-y-4 flex-grow w-full">
+                    <div className="space-y-4 grow w-full">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-gray-500 font-mono text-[10px]">TOTAL DATA</p>
@@ -2175,7 +2175,7 @@ export function MyEsimsScreen({
                             {esim.activationCode && (
                               <button
                                 onClick={() => setExpandedEsimId(expandedEsimId === esim.id ? null : esim.id)}
-                                className="bg-[#1a1917] hover:bg-gray-850 text-[#ffd700] hover:text-white font-mono text-[11px] font-bold border border-[#ffd700]/30 hover:border-[#ffd700] px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1 transition"
+                                className="bg-[#1a1917] hover:bg-gray-850 text-gold hover:text-white font-mono text-[11px] font-bold border border-gold/30 hover:border-gold px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1 transition"
                               >
                                 <span className="material-symbols-outlined text-sm">qr_code_2</span>
                                 <span>{expandedEsimId === esim.id ? "HIDE PROFILE" : "INSTALL PROFILE"}</span>
@@ -2185,7 +2185,7 @@ export function MyEsimsScreen({
                             {/* Button 3: Top Up Plan */}
                             <button 
                               onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'none')}
-                              className="bg-[#ffd700] hover:bg-[#e6c200] text-black font-display font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1"
+                              className="bg-gold hover:bg-gold-hover text-black font-display font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1"
                             >
                               <span className="material-symbols-outlined text-xs">add_circle</span>
                               <span>TOP UP PLAN</span>
@@ -2199,10 +2199,10 @@ export function MyEsimsScreen({
 
                   {/* Manual Installation & QR scanning Accordion */}
                   {expandedEsimId === esim.id && esim.activationCode && (
-                    <div className="mt-4 p-4 rounded-xl border border-[#ffd700]/20 bg-[#26241e]/50 space-y-4">
+                    <div className="mt-4 p-4 rounded-xl border border-gold/20 bg-[#26241e]/50 space-y-4">
                       <div className="text-center">
-                        <p className="font-display font-bold text-xs text-[#ffd700] tracking-wide mb-2">SCAN eSIM PROFILE QR CODE</p>
-                        <div className="inline-block bg-white p-2.5 rounded-xl shadow-lg border-2 border-[#ffd700]">
+                        <p className="font-display font-bold text-xs text-gold tracking-wide mb-2">SCAN eSIM PROFILE QR CODE</p>
+                        <div className="inline-block bg-white p-2.5 rounded-xl shadow-lg border-2 border-gold">
                           <img 
                             src={esim.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=LPA:1$${esim.smdpAddress}$${esim.activationCode}`} 
                             alt="eSIM QR Code" 
@@ -2225,7 +2225,7 @@ export function MyEsimsScreen({
                                 setCopiedText("smdp-" + esim.id);
                                 setTimeout(() => setCopiedText(null), 2000);
                               }}
-                              className="text-xs text-[#ffd700] hover:text-white font-mono shrink-0 cursor-pointer"
+                              className="text-xs text-gold hover:text-white font-mono shrink-0 cursor-pointer"
                             >
                               {copiedText === "smdp-" + esim.id ? "Copied!" : "Copy"}
                             </button>
@@ -2242,7 +2242,7 @@ export function MyEsimsScreen({
                                 setCopiedText("ac-" + esim.id);
                                 setTimeout(() => setCopiedText(null), 2000);
                               }}
-                              className="text-xs text-[#ffd700] hover:text-white font-mono shrink-0 cursor-pointer"
+                              className="text-xs text-gold hover:text-white font-mono shrink-0 cursor-pointer"
                             >
                               {copiedText === "ac-" + esim.id ? "Copied!" : "Copy"}
                             </button>
@@ -2260,7 +2260,7 @@ export function MyEsimsScreen({
                                   setCopiedText("iccid-" + esim.id);
                                   setTimeout(() => setCopiedText(null), 2000);
                                 }}
-                                className="text-xs text-[#ffd700] hover:text-white font-mono shrink-0 cursor-pointer"
+                                className="text-xs text-gold hover:text-white font-mono shrink-0 cursor-pointer"
                               >
                                 {copiedText === "iccid-" + esim.id ? "Copied!" : "Copy"}
                               </button>
@@ -2278,7 +2278,7 @@ export function MyEsimsScreen({
             <div className="flex justify-center pt-2">
               <button 
                 onClick={() => onNavigate(ScreenId.GHANA_PLANS, 'none')}
-                className="w-full sm:w-auto px-6 py-2 bg-transparent border border-gray-600 hover:border-[#ffd700] text-gray-300 hover:text-white transition rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2 bg-transparent border border-gray-600 hover:border-gold text-gray-300 hover:text-white transition rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xs">explore</span>
                 <span>Active Plans Manager (Browse)</span>
@@ -2343,14 +2343,14 @@ export function MyEsimsScreen({
           {/* Refer a friend promoter card matching element xpath: `//section[.//h3[text()='Refer a Friend']]` */}
           <section
             onClick={() => onNavigate(ScreenId.REFER_FRIEND, 'push')}
-            className="group cursor-pointer rounded-2xl overflow-hidden relative h-36 flex items-end p-4 border border-[#ffd700]/10 hover:border-[#ffd700]/30 shadow-md transition-all duration-300"
+            className="group cursor-pointer rounded-2xl overflow-hidden relative h-36 flex items-end p-4 border border-gold/10 hover:border-gold/30 shadow-md transition-all duration-300"
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 transition-colors group-hover:from-black/100"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/45 to-transparent z-10 transition-colors group-hover:from-black"></div>
             <div className="absolute inset-0 z-0 bg-cover bg-center group-hover:scale-105 duration-500" style={{ backgroundImage: `url(${HERITAGE_IMAGES.networkGrid})` }}></div>
             
             <div className="relative z-20 space-y-1 w-full text-left">
-              <span className="bg-[#cc4e3c] text-white px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest leading-none font-mono">PROMO</span>
-              <h3 className="font-display text-sm font-bold text-[#ffd700] pt-1">Refer a Friend</h3>
+              <span className="bg-terracotta text-white px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest leading-none font-mono">PROMO</span>
+              <h3 className="font-display text-sm font-bold text-gold pt-1">Refer a Friend</h3>
               <p className="text-gray-300 text-[11px] leading-snug">
                 Earn 3GB free data for every friend who joins Simfinity. Get gift codes instantly.
               </p>
@@ -2376,23 +2376,23 @@ export function AccountScreen({
   return (
     <div className="anim-fade px-4 sm:px-6 max-w-xl mx-auto py-6 space-y-6">
       {/* Profile Card Header */}
-      <div className="glass-panel rounded-2xl p-6 relative overflow-hidden flex items-center gap-5 border border-[#ffd700]/15">
-        <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#ffd700]/5 rounded-full blur-xl"></div>
+      <div className="glass-panel rounded-2xl p-6 relative overflow-hidden flex items-center gap-5 border border-gold/15">
+        <div className="absolute -top-10 -right-10 w-24 h-24 bg-gold/5 rounded-full blur-xl"></div>
         
         {/* Avatar portrait with Verification Status badge */}
         <div className="relative shrink-0">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#ffd700] p-0.5 shadow-lg shadow-[#ffd700]/10">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gold p-0.5 shadow-lg shadow-gold/10">
             <img className="w-full h-full rounded-full object-cover" src={HERITAGE_IMAGES.avatarKwame} alt="Kwame portrait" />
           </div>
-          <span className="absolute -top-1 -right-1 bg-[#ffd700] text-black w-4 h-4 rounded-full flex items-center justify-center" title="Verified Member">
-            <span className="material-symbols-outlined text-[10px] font-bold font-light text-black select-none">verified</span>
+          <span className="absolute -top-1 -right-1 bg-gold text-black w-4 h-4 rounded-full flex items-center justify-center" title="Verified Member">
+            <span className="material-symbols-outlined text-[10px] font-bold text-black select-none">verified</span>
           </span>
         </div>
 
         <div>
           <h3 className="font-display font-black text-lg text-white leading-tight">{user.fullName}</h3>
-          <p className="font-mono text-xs text-[#ffd700]">{user.email}</p>
-          <div className="inline-flex mt-1 items-center gap-1 px-2 py-0.5 bg-[#ffd700]/10 rounded border border-[#ffd700]/20 text-[9px] font-mono text-[#ffd700] uppercase font-semibold">
+          <p className="font-mono text-xs text-gold">{user.email}</p>
+          <div className="inline-flex mt-1 items-center gap-1 px-2 py-0.5 bg-gold/10 rounded border border-gold/20 text-[9px] font-mono text-gold uppercase font-semibold">
             <span className="material-symbols-outlined text-[10px] select-none">check_circle</span>
             <span>Ghana ID Verified</span>
           </div>
@@ -2408,7 +2408,7 @@ export function AccountScreen({
           className="flex items-center justify-between p-4 bg-transparent hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#ffd700]">assignment_ind</span>
+            <span className="material-symbols-outlined text-gold">assignment_ind</span>
             <div className="text-left">
               <h4 className="font-display text-xs sm:text-sm font-bold text-white">Personal Information</h4>
               <p className="text-[10px] text-gray-500">Edit custom details and cellular configs</p>
@@ -2423,7 +2423,7 @@ export function AccountScreen({
           className="flex items-center justify-between p-4 bg-transparent hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#ffd700]">import_contacts</span>
+            <span className="material-symbols-outlined text-gold">import_contacts</span>
             <div className="text-left">
               <h4 className="font-display text-xs sm:text-sm font-bold text-white">Travel Documents</h4>
               <p className="text-[10px] text-gray-500">View passports, active entry visas, vaccine records</p>
@@ -2435,7 +2435,7 @@ export function AccountScreen({
         {/* Informational item */}
         <div className="flex items-center justify-between p-4 text-gray-400">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#ffd700]">security</span>
+            <span className="material-symbols-outlined text-gold">security</span>
             <div className="text-left">
               <h4 className="font-display text-xs sm:text-sm font-bold text-gray-300">Privacy & Security</h4>
               <p className="text-[10px] text-gray-500 font-mono">ENCRYPTED CODES: SHA-256 enabled</p>
@@ -2452,7 +2452,7 @@ export function AccountScreen({
             onLogout();
             onNavigate(ScreenId.LOGIN, 'push_back');
           }}
-          className="w-full sm:w-auto px-6 py-3 bg-[#cc4e3c]/15 hover:bg-[#cc4e3c]/25 border border-[#cc4e3c]/40 text-red-400 rounded-xl font-mono text-xs font-bold tracking-wider active:scale-95 duration-200 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-6 py-3 bg-terracotta/15 hover:bg-terracotta/25 border border-terracotta/40 text-red-400 rounded-xl font-mono text-xs font-bold tracking-wider active:scale-95 duration-200 cursor-pointer flex items-center justify-center gap-2"
         >
           <span className="material-symbols-outlined text-base">logout</span>
           <span>logout</span>
@@ -2501,11 +2501,11 @@ export function PersonalInfoScreen({
       <div className="flex items-center justify-between">
         <button 
           onClick={() => onNavigate(ScreenId.ACCOUNT, 'push_back')}
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-[#201f1f] hover:bg-[#2a2a2a] border border-[#4d4732]/30 text-white cursor-pointer"
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-clay hover:bg-clay-high border border-[#4d4732]/30 text-white cursor-pointer"
         >
           <span className="material-symbols-outlined select-none text-base">arrow_back</span>
         </button>
-        <span className="font-display text-xs font-extrabold tracking-wider text-[#ffd700]">PERSONAL INFO</span>
+        <span className="font-display text-xs font-extrabold tracking-wider text-gold">PERSONAL INFO</span>
         <div className="w-8"></div>
       </div>
 
@@ -2524,10 +2524,10 @@ export function PersonalInfoScreen({
       <form onSubmit={handleSave} className="glass-panel rounded-2xl p-5 space-y-4">
         {/* Visual profile avatar */}
         <div className="flex flex-col items-center pb-4">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#ffd700] p-0.5 shadow-lg">
+          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gold p-0.5 shadow-lg">
             <img className="w-full h-full rounded-full object-cover" src={HERITAGE_IMAGES.avatarKwame} alt="Kwame" />
           </div>
-          <span className="text-xs font-mono text-[#ffd700] mt-2 font-bold flex items-center gap-1 sm:text-xs">
+          <span className="text-xs font-mono text-gold mt-2 font-bold flex items-center gap-1 sm:text-xs">
             <span className="material-symbols-outlined text-xs">gpp_good</span> Verified Status
           </span>
         </div>
@@ -2591,7 +2591,7 @@ export function PersonalInfoScreen({
         <div className="kente-divider"></div>
 
         <div className="space-y-4">
-          <h3 className="font-display font-bold text-xs text-[#ffd700] uppercase tracking-wider">Identity Verification Document</h3>
+          <h3 className="font-display font-bold text-xs text-gold uppercase tracking-wider">Identity Verification Document</h3>
           <p className="text-gray-400 text-[11px] leading-snug">
             To satisfy Ghana MCA (National Communications Authority) regulations for secure line provisioning, please upload a scan of your ID.
           </p>
@@ -2609,7 +2609,7 @@ export function PersonalInfoScreen({
         <div className="pt-2">
           <button 
             type="submit"
-            className="w-full bg-[#ffd700] hover:bg-[#e6c200] text-black font-semibold font-display py-3 rounded-lg active:scale-95 duration-100 transition cursor-pointer flex justify-center items-center"
+            className="w-full bg-gold hover:bg-gold-hover text-black font-semibold font-display py-3 rounded-lg active:scale-95 duration-100 transition cursor-pointer flex justify-center items-center"
           >
             Save Changes
           </button>
@@ -2680,11 +2680,11 @@ export function TravelDocsScreen({
       <div className="flex items-center justify-between">
         <button 
           onClick={() => onNavigate(ScreenId.ACCOUNT, 'push_back')}
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-[#201f1f] hover:bg-[#2a2a2a] border border-[#4d4732]/30 text-white cursor-pointer"
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-clay hover:bg-clay-high border border-[#4d4732]/30 text-white cursor-pointer"
         >
           <span className="material-symbols-outlined select-none text-base">arrow_back</span>
         </button>
-        <span className="font-display text-xs font-extrabold tracking-wider text-[#ffd700]">TRAVEL DOCS</span>
+        <span className="font-display text-xs font-extrabold tracking-wider text-gold">TRAVEL DOCS</span>
         <div className="w-8"></div>
       </div>
 
@@ -2697,10 +2697,10 @@ export function TravelDocsScreen({
       <section className="glass-panel rounded-xl p-5 relative overflow-hidden">
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#ffd700] text-xl">import_contacts</span>
+            <span className="material-symbols-outlined text-gold text-xl">import_contacts</span>
             <h3 className="font-display text-sm font-bold text-white">Passport Certificate</h3>
           </div>
-          <span className="bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] px-2 py-0.5 rounded-full font-mono text-[9px] font-bold">
+          <span className="bg-gold/10 border border-gold/30 text-gold px-2 py-0.5 rounded-full font-mono text-[9px] font-bold">
             VERIFIED
           </span>
         </div>
@@ -2713,7 +2713,7 @@ export function TravelDocsScreen({
           <div>
             <p className="text-gray-500 text-[10px] uppercase">EXPIRY DATE</p>
             <p className="font-bold text-white">{user.passportExpiry}</p>
-            <p className="text-[9px] text-[#94ecb4] mt-0.5">1452 days remaining</p>
+            <p className="text-[9px] text-green-light mt-0.5">1452 days remaining</p>
           </div>
         </div>
       </section>
@@ -2721,7 +2721,7 @@ export function TravelDocsScreen({
       {/* Visas list */}
       <section className="glass-panel rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#ffd700] text-xl">bookmark_added</span>
+          <span className="material-symbols-outlined text-gold text-xl">bookmark_added</span>
           <h3 className="font-display text-sm font-bold text-white">Active Visitor Visas</h3>
         </div>
         <div className="space-y-2.5 text-xs">
@@ -2756,15 +2756,15 @@ export function TravelDocsScreen({
       {/* Health records block */}
       <section className="glass-panel rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#ffd700] text-xl">medical_services</span>
+          <span className="material-symbols-outlined text-gold text-xl">medical_services</span>
           <h3 className="font-display text-sm font-bold text-white">Health Verification Certificates</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="bg-[#1c1b1b]/60 border border-[#4d4732]/20 p-3 rounded-xl flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[#cc4e3c] bg-[#cc4e3c]/10 p-1.5 rounded-full text-base">vaccines</span>
+            <span className="material-symbols-outlined text-terracotta bg-terracotta/10 p-1.5 rounded-full text-base">vaccines</span>
             <div>
               <p className="font-bold text-white">Yellow Fever Card</p>
-              <p className="text-[10px] text-[#94ecb4] font-mono leading-tight">Verified WHO</p>
+              <p className="text-[10px] text-green-light font-mono leading-tight">Verified WHO</p>
             </div>
           </div>
           <div className="bg-[#1c1b1b]/60 border border-[#4d4732]/20 p-3 rounded-xl flex items-center gap-2.5">
@@ -2778,7 +2778,7 @@ export function TravelDocsScreen({
       </section>
 
       {/* Insurance info */}
-      <section className="glass-panel rounded-xl p-5 border-l-4 border-l-[#891d11]">
+      <section className="glass-panel rounded-xl p-5 border-l-4 border-l-terracotta-dark">
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-1">
             <h4 className="font-display font-bold text-white text-xs">Travel Insurance Coverage</h4>
@@ -2792,9 +2792,9 @@ export function TravelDocsScreen({
       </section>
 
       {/* Dynamic Uploader Card Panel */}
-      <section className="glass-panel rounded-2xl p-5 border border-[#ffd700]/10 bg-gradient-to-br from-[#1c1b1b] to-black space-y-4">
+      <section className="glass-panel rounded-2xl p-5 border border-gold/10 bg-linear-to-br from-[#1c1b1b] to-black space-y-4">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#ffd700] text-xl">upload_file</span>
+          <span className="material-symbols-outlined text-gold text-xl">upload_file</span>
           <h3 className="font-display text-sm font-bold text-white">Upload Traveler Information & Credentials</h3>
         </div>
         <p className="text-gray-400 text-xs leading-snug">
@@ -2833,7 +2833,7 @@ export function TravelDocsScreen({
         <section className="glass-panel rounded-xl p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#ffd700] text-xl">folder_shared</span>
+              <span className="material-symbols-outlined text-gold text-xl">folder_shared</span>
               <h3 className="font-display text-sm font-bold text-white">Your Submitted Documents ({uploadedDocs.length})</h3>
             </div>
             <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold">Secure Store</span>
@@ -2862,8 +2862,8 @@ export function TravelDocsScreen({
                 </div>
 
                 <div className="relative shrink-0 flex items-center gap-1.5">
-                  <span className={`h-2 w-2 rounded-full ${doc.status === 'Verified SECURE' ? 'bg-[#94ecb4]' : 'bg-red-400 animate-pulse'}`}></span>
-                  <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${doc.status === 'Verified SECURE' ? 'text-[#94ecb4]' : 'text-red-400'}`}>
+                  <span className={`h-2 w-2 rounded-full ${doc.status === 'Verified SECURE' ? 'bg-green-light' : 'bg-red-400 animate-pulse'}`}></span>
+                  <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${doc.status === 'Verified SECURE' ? 'text-green-light' : 'text-red-400'}`}>
                     {doc.status}
                   </span>
                 </div>
@@ -2898,11 +2898,11 @@ export function ReferFriendScreen({
       <div className="flex items-center justify-between">
         <button 
           onClick={() => onNavigate(ScreenId.MY_ESIMS, 'push_back')}
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-[#201f1f] hover:bg-[#2a2a2a] border border-[#4d4732]/30 text-[#ffd700] cursor-pointer"
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-clay hover:bg-clay-high border border-[#4d4732]/30 text-gold cursor-pointer"
         >
           <span className="material-symbols-outlined select-none text-base">arrow_back</span>
         </button>
-        <span className="font-display text-xs font-extrabold tracking-wider text-[#ffd700]">SIMFINITY REWARD</span>
+        <span className="font-display text-xs font-extrabold tracking-wider text-gold">SIMFINITY REWARD</span>
         <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 select-none">
           <img className="w-full h-full object-cover" src={HERITAGE_IMAGES.avatarRefer} alt="Refer portal" />
         </div>
@@ -2910,9 +2910,9 @@ export function ReferFriendScreen({
 
       {/* Hero display block */}
       <div className="text-center space-y-3 relative">
-        <div className="w-full aspect-video rounded-2xl overflow-hidden relative border border-[#ffd700]/10 shadow-xl shadow-[#ffd700]/5 select-none">
+        <div className="w-full aspect-video rounded-2xl overflow-hidden relative border border-gold/10 shadow-xl shadow-gold/5 select-none">
           <img className="w-full h-full object-cover" src={HERITAGE_IMAGES.networkGrid} alt="Kente Net" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-linear-to-t from-surface-dim via-transparent to-transparent"></div>
         </div>
         <h2 className="font-display text-2xl font-black text-white">Share the Gift of Global Soul</h2>
         <p className="text-gray-300 text-xs sm:text-sm max-w-md mx-auto">
@@ -2922,15 +2922,15 @@ export function ReferFriendScreen({
 
       {/* Unique referral Code Section */}
       <div className="glass-panel rounded-2xl p-5 space-y-4">
-        <span className="font-mono text-[9px] uppercase tracking-widest text-[#ffd700] font-bold">Your Unique Code</span>
+        <span className="font-mono text-[9px] uppercase tracking-widest text-gold font-bold">Your Unique Code</span>
         
-        <div className="bg-[#0e0e0e] border border-[#ffd700]/25 rounded-xl p-3 flex justify-between items-center">
-          <span id="referral-code" className="font-display font-extrabold text-[#ffd700] text-sm tracking-widest pl-2">
+        <div className="bg-[#0e0e0e] border border-gold/25 rounded-xl p-3 flex justify-between items-center">
+          <span id="referral-code" className="font-display font-extrabold text-gold text-sm tracking-widest pl-2">
             {referralCode}
           </span>
           <button 
             onClick={handleCopy}
-            className="bg-[#ffd700] hover:bg-[#e6c200] text-black font-semibold font-mono text-xs px-4 py-2 rounded-lg flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+            className="bg-gold hover:bg-gold-hover text-black font-semibold font-mono text-xs px-4 py-2 rounded-lg flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
           >
             <span className="material-symbols-outlined text-sm">content_copy</span>
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -2954,12 +2954,12 @@ export function ReferFriendScreen({
         <h3 className="font-mono text-xs uppercase text-gray-400 tracking-wider font-bold">Referral Status</h3>
         
         <div className="glass-panel rounded-2xl p-5 relative">
-          <div className="absolute left-[39px] top-6 bottom-6 w-[1.5px] bg-[#4d4732]/35"></div>
+          <div className="absolute left-9.75 top-6 bottom-6 w-[1.5px] bg-[#4d4732]/35"></div>
           
           <div className="space-y-6 text-xs text-left">
             {/* Step 1 */}
             <div className="relative flex items-start gap-4">
-              <span className="w-10 h-10 rounded-full bg-[#ffd700] flex items-center justify-center text-black shrink-0 z-10 font-bold shadow-md shadow-[#ffd700]/20">
+              <span className="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-black shrink-0 z-10 font-bold shadow-md shadow-gold/20">
                 <span className="material-symbols-outlined text-base">check_circle</span>
               </span>
               <div className="pt-1.5">
@@ -2970,7 +2970,7 @@ export function ReferFriendScreen({
 
             {/* Step 2 */}
             <div className="relative flex items-start gap-4">
-              <span className="w-10 h-10 rounded-full bg-gray-950 border border-[#ffd700]/50 flex items-center justify-center text-[#ffd700] shrink-0 z-10 font-bold">
+              <span className="w-10 h-10 rounded-full bg-gray-950 border border-gold/50 flex items-center justify-center text-gold shrink-0 z-10 font-bold">
                 <span className="material-symbols-outlined text-sm">person_add</span>
               </span>
               <div className="pt-1.5">
@@ -2994,10 +2994,10 @@ export function ReferFriendScreen({
       </div>
 
       {/* Wisdom quote */}
-      <div className="p-4 rounded-xl border border-[#ffd700]/10 bg-[#ffd700]/5 relative overflow-hidden flex items-start gap-3">
-        <span className="material-symbols-outlined text-[#ffd700] text-xl shrink-0 mt-0.5">auto_awesome</span>
+      <div className="p-4 rounded-xl border border-gold/10 bg-gold/5 relative overflow-hidden flex items-start gap-3">
+        <span className="material-symbols-outlined text-gold text-xl shrink-0 mt-0.5">auto_awesome</span>
         <div className="space-y-1">
-          <p className="font-mono text-[9px] uppercase tracking-wider text-[#ffd700] font-bold">Wisdom of the Ancients</p>
+          <p className="font-mono text-[9px] uppercase tracking-wider text-gold font-bold">Wisdom of the Ancients</p>
           <p className="text-xs text-gray-400 italic font-medium leading-relaxed">
             "Obi nkyerɛ abofra Nyame" — Nobody points out God to a child; goodness is self-evident. Share the goodness of Simfinity.
           </p>

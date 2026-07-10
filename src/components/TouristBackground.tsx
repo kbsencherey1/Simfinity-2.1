@@ -91,7 +91,7 @@ export function TouristBackground({ currentScreen }: TouristBackgroundProps) {
       ))}
 
       {/* Visually stunning light-to-moderate ambient glass layer overlay so page text remains fully readable but the beauty of Ghana is clear */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
 
       {/* Elegant, interactive floating information badge of the active tourist site */}
       <div className="absolute bottom-24 left-4 md:left-8 z-30 pointer-events-auto select-text hidden sm:flex flex-col max-w-xs transition-all duration-300">
@@ -99,25 +99,25 @@ export function TouristBackground({ currentScreen }: TouristBackgroundProps) {
           <button
             type="button"
             onClick={() => setIsMinimized(false)}
-            className="glass-panel backdrop-blur-md px-3 py-1.5 rounded-full border border-[#ffd700]/30 hover:border-[#ffd700] hover:bg-black/80 flex items-center gap-1.5 shadow-lg shadow-black/80 text-[#ffd700] transition-all text-[11px] font-mono font-bold cursor-pointer"
+            className="glass-panel backdrop-blur-md px-3 py-1.5 rounded-full border border-gold/30 hover:border-gold hover:bg-black/80 flex items-center gap-1.5 shadow-lg shadow-black/80 text-gold transition-all text-[11px] font-mono font-bold cursor-pointer"
             title="Expand Heritage Destination Details"
           >
             <span className="material-symbols-outlined text-[12px] animate-pulse">location_on</span>
             <span>Heritage Spot: {activeSpot.name.split(' ')[0]}...</span>
           </button>
         ) : (
-          <div className="glass-panel backdrop-blur-md px-4 py-3 rounded-xl border border-[#ffd700]/15 flex flex-col gap-1 shadow-2xl relative overflow-hidden group hover:border-[#ffd700]/30 transition-all">
-            <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#ffd700]/5 rounded-full blur-xl pointer-events-none"></div>
+          <div className="glass-panel backdrop-blur-md px-4 py-3 rounded-xl border border-gold/15 flex flex-col gap-1 shadow-2xl relative overflow-hidden group hover:border-gold/30 transition-all">
+            <div className="absolute -top-10 -right-10 w-20 h-20 bg-gold/5 rounded-full blur-xl pointer-events-none"></div>
             
             <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-1.5 text-[#ffd700] text-[10px] font-mono tracking-wider font-bold">
+              <div className="flex items-center gap-1.5 text-gold text-[10px] font-mono tracking-wider font-bold">
                 <span className="material-symbols-outlined text-[13px] animate-bounce">location_on</span>
                 <span>DISCOVER GHANA</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMinimized(true)}
-                className="w-4 h-4 rounded-full hover:bg-[#ffd700]/15 flex items-center justify-center text-gray-400 hover:text-[#ffd700] transition-colors cursor-pointer"
+                className="w-4 h-4 rounded-full hover:bg-gold/15 flex items-center justify-center text-gray-400 hover:text-gold transition-colors cursor-pointer"
                 title="Minimize details"
               >
                 <span className="material-symbols-outlined text-[10px] font-bold">close</span>
@@ -132,7 +132,7 @@ export function TouristBackground({ currentScreen }: TouristBackgroundProps) {
               {activeSpot.location}
             </p>
             
-            <p className="text-[10px] text-gray-500 leading-relaxed font-sans pt-1 border-t border-[#ffd700]/5 mt-1 select-none">
+            <p className="text-[10px] text-gray-500 leading-relaxed font-sans pt-1 border-t border-gold/5 mt-1 select-none">
               {activeSpot.description}
             </p>
           </div>

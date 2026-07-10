@@ -108,8 +108,8 @@ export function FileUploader({
         onClick={handleButtonClick}
         className={`relative border border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer ${
           dragActive
-            ? 'border-[#ffd700] bg-[#ffd700]/5 scale-[1.01]'
-            : 'border-white/10 bg-[#121212]/50 hover:border-white/20 hover:bg-[#181818]/65'
+            ? 'border-gold bg-gold/5 scale-[1.01]'
+            : 'border-white/10 bg-charcoal/50 hover:border-white/20 hover:bg-[#181818]/65'
         }`}
       >
         <input
@@ -135,7 +135,7 @@ export function FileUploader({
               </div>
             ) : (
               <div className="relative flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2.5 rounded-lg w-full max-w-sm">
-                <span className="material-symbols-outlined text-[#ffd700] text-2xl shrink-0">
+                <span className="material-symbols-outlined text-gold text-2xl shrink-0">
                   {fileName.toLowerCase().endsWith('.pdf') ? 'picture_as_pdf' : 'draft'}
                 </span>
                 <div className="text-left overflow-hidden flex-1">
@@ -162,13 +162,13 @@ export function FileUploader({
                 </div>
                 <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-[#00c9ff] via-[#2575fc] to-[#bf55ec] h-full transition-all duration-200"
+                    className="bg-linear-to-r from-[#00c9ff] via-[#2575fc] to-[#bf55ec] h-full transition-all duration-200"
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-[#94ecb4] text-[10px] font-mono font-bold uppercase">
+              <div className="flex items-center gap-1.5 text-green-light text-[10px] font-mono font-bold uppercase">
                 <span className="material-symbols-outlined text-xs">check_circle</span>
                 <span>Document successfully verification encoded</span>
               </div>
@@ -181,7 +181,7 @@ export function FileUploader({
             </div>
             <div>
               <p className="text-xs text-white font-bold">
-                Drag & drop or <span className="text-[#ffd700] hover:underline">browse</span>
+                Drag & drop or <span className="text-gold hover:underline">browse</span>
               </p>
               <p className="text-[10px] text-gray-500 mt-1 font-mono font-medium">{description}</p>
             </div>
