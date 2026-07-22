@@ -236,7 +236,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       setActiveEsims(prev => [newSub, ...prev]);
     }
-    if (token) setTimeout(() => fetchEsims(token), 2500);
+    if (token) fetchEsims(token);
   };
 
   return (
