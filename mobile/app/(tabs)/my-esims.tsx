@@ -13,7 +13,6 @@ import {
   Share,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { TouristBackground } from '../../components/TouristBackground';
 import { SkeletonBox } from '../../components/Skeleton';
 import Svg, { Circle, G } from 'react-native-svg';
 import { router } from 'expo-router';
@@ -417,7 +416,6 @@ export default function MyEsimsScreen() {
 
   return (
     <View style={styles.root}>
-      <TouristBackground />
       <SafeAreaView edges={['top']} style={styles.header}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.headerTitle} numberOfLines={1}>

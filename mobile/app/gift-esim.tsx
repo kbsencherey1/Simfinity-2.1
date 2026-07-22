@@ -12,7 +12,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { COLORS, glass } from '../components/styles';
-import { TouristBackground } from '../components/TouristBackground';
 import { API_BASE } from '../config';
 
 interface GiftDetails {
@@ -61,7 +60,6 @@ export default function GiftEsimScreen() {
   if (loading) {
     return (
       <View style={s.root}>
-        <TouristBackground />
         <SafeAreaView style={s.centered}>
           <ActivityIndicator size="large" color={COLORS.gold} />
           <Text style={s.loadingText}>Loading your gift eSIM...</Text>
@@ -73,7 +71,6 @@ export default function GiftEsimScreen() {
   if (error || !details) {
     return (
       <View style={s.root}>
-        <TouristBackground />
         <SafeAreaView style={s.centered}>
           <Text style={s.errorIcon}>✕</Text>
           <Text style={s.errorTitle}>Gift Not Found</Text>
@@ -94,7 +91,6 @@ export default function GiftEsimScreen() {
 
   return (
     <View style={s.root}>
-      <TouristBackground />
       <SafeAreaView edges={['top']} style={s.header}>
         <Text style={s.headerTitle}>Gift eSIM</Text>
         <Text style={s.headerSub}>Someone shared this eSIM plan with you</Text>
