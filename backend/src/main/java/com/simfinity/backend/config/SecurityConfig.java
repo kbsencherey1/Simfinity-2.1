@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/verify-email").permitAll()
                 .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                 .requestMatchers("/api/zendit/**").permitAll()
+                .requestMatchers("/api/paystack/**").permitAll()
                 .requestMatchers("/api/local-insight").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/network/coverage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchange-rates").permitAll()

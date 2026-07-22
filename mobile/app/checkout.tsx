@@ -49,8 +49,8 @@ export default function CheckoutScreen() {
         },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
         if (data.isTopUp) {
           setTopUpEsim(null);
           if (token) fetchEsims(token);
@@ -65,7 +65,7 @@ export default function CheckoutScreen() {
           router.push('/activate-esim');
         }
       } else {
-        setPayError(data.error || 'Payment not yet confirmed. Complete the transaction and try again.');
+        setPayError(data?.error || `Payment not yet confirmed (status ${res.status}). Complete the transaction and try again.`);
       }
     } catch {
       setPayError('Verification error. Please try again.');
@@ -90,8 +90,8 @@ export default function CheckoutScreen() {
           planId: plan.id,
         }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
         const ref = data.reference;
         const authUrl = data.authorization_url;
         setPaymentUrl(authUrl);
@@ -101,7 +101,7 @@ export default function CheckoutScreen() {
         // Auto-verify once the browser closes (via redirect or manual close)
         await doVerify(ref);
       } else {
-        setPayError(data.error || 'Failed to initialize payment.');
+        setPayError(data?.error || `Failed to initialize payment (status ${res.status}).`);
       }
     } catch {
       setPayError('Cannot reach the server. Check your network or that the backend is running.');
@@ -134,12 +134,12 @@ export default function CheckoutScreen() {
         {/* Plan card */}
         <View style={[glass.panel, styles.planCard]}>
           <View style={styles.planHeader}>
-            <View>
+            <View style={styles.planNameCol}>
               <Text style={styles.planTier}>PREMIUM TIER</Text>
               <Text style={styles.planName}>{plan.name}</Text>
             </View>
             <View style={styles.planPriceBox}>
-              <Text style={styles.planPrice}>GHS {plan.priceGhs}</Text>
+              <Text style={styles.planPrice} numberOfLines={1} adjustsFontSizeToFit>GHS {plan.priceGhs}</Text>
               <Text style={styles.planPriceAlt}>~ ${plan.priceUsd} USD</Text>
             </View>
           </View>
@@ -302,10 +302,11 @@ const styles = StyleSheet.create({
   sub: { color: COLORS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },
 
   planCard: { padding: 18, gap: 16 },
-  planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  planNameCol: { flex: 1 },
   planTier: { color: '#cc4e3c', fontSize: 9, fontWeight: '800', letterSpacing: 1, marginBottom: 4 },
   planName: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  planPriceBox: { alignItems: 'flex-end' },
+  planPriceBox: { alignItems: 'flex-end', flexShrink: 0, maxWidth: '42%' },
   planPrice: { color: COLORS.gold, fontSize: 20, fontWeight: '800' },
   planPriceAlt: { color: COLORS.textDim, fontSize: 10 },
   planStatsRow: {
