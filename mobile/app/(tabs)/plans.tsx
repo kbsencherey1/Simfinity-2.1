@@ -9,7 +9,6 @@ import {
   Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TouristBackground } from '../../components/TouristBackground';
 import { SkeletonBox } from '../../components/Skeleton';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -175,7 +174,6 @@ export default function PlansScreen() {
 
   return (
     <View style={styles.root}>
-      <TouristBackground />
       <SafeAreaView edges={['top']} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>

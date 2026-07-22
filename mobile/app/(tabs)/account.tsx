@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { TouristBackground } from '../../components/TouristBackground';
 import { AvatarImage } from '../../components/AvatarImage';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,7 +70,6 @@ export default function AccountScreen() {
   if (!isLoggedIn) {
     return (
       <View style={styles.root}>
-        <TouristBackground />
         <SafeAreaView style={styles.centeredBox}>
           <View style={styles.lockPlaceholder}>
             <Text style={styles.lockPlaceholderText}>?</Text>
@@ -93,7 +91,6 @@ export default function AccountScreen() {
 
   return (
     <View style={styles.root}>
-      <TouristBackground />
       <SafeAreaView edges={['top']} style={styles.header}>
         <Text style={styles.headerTitle}>Account</Text>
       </SafeAreaView>
@@ -119,9 +116,6 @@ export default function AccountScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{user.fullName}</Text>
             <Text style={styles.profileEmail} numberOfLines={1} ellipsizeMode="middle">{user.email}</Text>
-            <View style={styles.idVerifiedBadge}>
-              <Text style={styles.idVerifiedText}>✓ Ghana ID Verified</Text>
-            </View>
           </View>
         </View>
 
@@ -263,20 +257,6 @@ const styles = StyleSheet.create({
   profileInfo: { flex: 1, gap: 4 },
   profileName: { color: '#fff', fontSize: 18, fontWeight: '800' },
   profileEmail: { color: COLORS.gold, fontSize: 12, fontWeight: '500' },
-  idVerifiedBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-    marginTop: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  idVerifiedText: { color: COLORS.gold, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
 
   menuCard: { overflow: 'hidden', padding: 0 },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },

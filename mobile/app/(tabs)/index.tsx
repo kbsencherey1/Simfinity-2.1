@@ -8,7 +8,6 @@ import {
   ImageBackground,
   Modal,
 } from 'react-native';
-import { TouristBackground } from '../../components/TouristBackground';
 import { SkeletonBox } from '../../components/Skeleton';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -66,7 +65,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      <TouristBackground />
       <SafeAreaView edges={['top']} style={styles.header}>
         <Pressable onPress={() => router.push('/(tabs)')}>
           <SimfinityNavbarLogo size={28} />
