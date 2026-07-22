@@ -70,7 +70,7 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.logoArea}>
-              <SimfinityLogo size={90} showText />
+              <SimfinityLogo size={130} showText />
               <Text style={styles.tagline}>GLOBAL CONNECTIVITY WITH LOCAL SOUL</Text>
             </View>
 

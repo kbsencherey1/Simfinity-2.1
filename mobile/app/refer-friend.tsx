@@ -75,13 +75,7 @@ export default function ReferFriendScreen() {
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
         <Text style={styles.headerLabel}>SIMFINITY REWARD</Text>
-        <View style={styles.headerAvatarWrap}>
-          <Image
-            source={{ uri: HERITAGE_IMAGES.avatarRefer }}
-            style={styles.headerAvatar}
-            resizeMode="cover"
-          />
-        </View>
+        <View style={{ width: 36 }} />
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -247,9 +241,6 @@ const styles = StyleSheet.create({
   },
   backIcon: { color: COLORS.gold, fontSize: 18, fontWeight: '700' },
   headerLabel: { color: COLORS.gold, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
-  headerAvatarWrap: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  headerAvatar: { width: 36, height: 36 },
-
   scroll: { padding: 16, gap: 16, paddingBottom: 40 },
 
   heroBlock: { gap: 12, alignItems: 'center' },
