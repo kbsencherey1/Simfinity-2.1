@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
   Share,
+  ActivityIndicator,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { SkeletonBox } from '../../components/Skeleton';
@@ -20,8 +21,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
 import { useApp } from '../../context/AppContext';
 import { HERITAGE_IMAGES } from '../../data';
-import { ESimSubscription, UsageData } from '../../types';
+import { ESimPlan, ESimSubscription, UsageData } from '../../types';
 import { API_BASE } from '../../config';
+import { POPULAR_COUNTRIES } from './plans';
 
 function formatExpiry(minutes?: number, days?: number): string {
   const total = minutes ?? (days != null ? days * 24 * 60 : 0);
@@ -191,18 +193,49 @@ function ProfileSection({ esim }: { esim: ESimSubscription }) {
 function SwipeableEsimCard({
   esim,
   onDelete,
-  onTopUp,
 }: {
   esim: ESimSubscription;
   onDelete: (id: string) => void;
-  onTopUp: () => void;
 }) {
   const isUnlimited = esim.totalDataGb.toLowerCase().includes('unlimited');
 
   const [showProfile, setShowProfile] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [giftLoading, setGiftLoading] = useState(false);
-  const { token, fetchEsims } = useApp();
+  const [topUpLoading, setTopUpLoading] = useState(false);
+  const { token, fetchEsims, setCheckoutPlan, setTopUpEsim } = useApp();
+
+  const handleTopUp = async () => {
+    setTopUpLoading(true);
+    try {
+      if (esim.planId) {
+        const codes = POPULAR_COUNTRIES.map(c => c.code);
+        const match = esim.planId.match(new RegExp(`-(${codes.join('|')})-`));
+        const country = match ? match[1] : 'GH';
+        const res = await fetch(`${API_BASE}/api/zendit/offers?country=${country}`);
+        if (res.ok) {
+          const data = await res.json();
+          const matchedPlan: ESimPlan | undefined = data?.plans?.find(
+            (p: ESimPlan) => p.id === esim.planId
+          );
+          if (matchedPlan) {
+            setTopUpEsim(esim);
+            setCheckoutPlan(matchedPlan);
+            router.push('/checkout');
+            return;
+          }
+        }
+      }
+    } catch {
+      // fall through — let the user pick the plan manually below
+    } finally {
+      setTopUpLoading(false);
+    }
+    // Couldn't resolve the exact plan (discontinued, offline, etc.) — fall back
+    // to the plan picker, pre-filtered to this eSIM's country.
+    setTopUpEsim(esim);
+    router.push('/(tabs)/plans');
+  };
 
   useEffect(() => {
     if (!esim.dbId || !token) return;
@@ -373,11 +406,18 @@ function SwipeableEsimCard({
               <Text style={styles.giftBtnText}>GIFT{'\n'}eSIM</Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.topUpBtn, pressed && styles.topUpBtnPressed]}
-              onPress={onTopUp}
+              style={({ pressed }) => [styles.topUpBtn, pressed && styles.topUpBtnPressed, topUpLoading && styles.topUpBtnLoading]}
+              onPress={handleTopUp}
+              disabled={topUpLoading}
             >
-              <Text style={styles.topUpBtnIcon}>+</Text>
-              <Text style={styles.topUpBtnText}>TOP UP{'\n'}PLAN</Text>
+              {topUpLoading ? (
+                <ActivityIndicator color="#000" size="small" />
+              ) : (
+                <>
+                  <Text style={styles.topUpBtnIcon}>+</Text>
+                  <Text style={styles.topUpBtnText}>TOP UP{'\n'}PLAN</Text>
+                </>
+              )}
             </Pressable>
           </View>
         </View>
@@ -387,7 +427,7 @@ function SwipeableEsimCard({
 }
 
 export default function MyEsimsScreen() {
-  const { activeEsims, pastEsims, token, fetchEsims, user, payments, fetchPayments, setTopUpEsim } = useApp();
+  const { activeEsims, pastEsims, token, fetchEsims, user, payments, fetchPayments } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [localActiveEsims, setLocalActiveEsims] = useState<ESimSubscription[]>([]);
   const [showAll, setShowAll] = useState(false);
@@ -484,10 +524,6 @@ export default function MyEsimsScreen() {
                 key={esim.id}
                 esim={esim}
                 onDelete={handleDeleteEsim}
-                onTopUp={() => {
-                  setTopUpEsim(esim);
-                  router.push('/(tabs)/plans');
-                }}
               />
             ))}
             {hiddenCount > 0 && (
@@ -802,6 +838,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gold,
   },
   topUpBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.97 }] },
+  topUpBtnLoading: { opacity: 0.6 },
   topUpBtnIcon: { color: '#000', fontSize: 16, fontWeight: '800' },
   topUpBtnText: { color: '#000', fontSize: 9, fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
   giftBtn: {
