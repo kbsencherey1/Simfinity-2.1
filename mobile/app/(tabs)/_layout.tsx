@@ -81,7 +81,7 @@ function AnimatedTabIcon({ focused, Icon }: { focused: boolean; Icon: IconCompon
 
 export default function TabsLayout() {
   return (
-    <View style={{ flex: 1, backgroundColor: '#050505' }}>
+    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
       <Tabs
         screenOptions={{
           headerShown: false,
