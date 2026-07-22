@@ -62,7 +62,7 @@ export default function SplashScreen() {
         >
           {/* Logo + tagline */}
           <View style={styles.logoSection}>
-            <SimfinityLogo size={100} showText />
+            <SimfinityLogo size={140} showText />
             <Text style={styles.tagline}>Global Connectivity with Local Soul</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>GHANA 5G TRAVELER eSIM COMPANION</Text>
