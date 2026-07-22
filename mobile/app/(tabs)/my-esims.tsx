@@ -202,7 +202,7 @@ function SwipeableEsimCard({
   const [showProfile, setShowProfile] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [giftLoading, setGiftLoading] = useState(false);
-  const { token } = useApp();
+  const { token, fetchEsims } = useApp();
 
   useEffect(() => {
     if (!esim.dbId || !token) return;
@@ -248,7 +248,10 @@ function SwipeableEsimCard({
   const handleGift = async () => {
     if (!token) return;
     if (!esim.dbId) {
-      Alert.alert('Not Ready', 'eSIM data is still loading. Pull to refresh and try again.');
+      setGiftLoading(true);
+      await fetchEsims(token);
+      setGiftLoading(false);
+      Alert.alert('Almost Ready', 'Your eSIM just finished syncing — tap Gift again.');
       return;
     }
     setGiftLoading(true);
