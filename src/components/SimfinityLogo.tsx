@@ -47,9 +47,9 @@ export function SimfinityLogo({
             <stop offset="100%" stopColor="#00d2ff" />
           </linearGradient>
 
-          <shadow id="logo-glow">
+          <filter id="logo-glow">
             <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#00d2ff" floodOpacity="0.25" />
-          </shadow>
+          </filter>
         </defs>
 
         {/* Master Logo Icon - Beautiful S-shaped double loop Infinity System */}
