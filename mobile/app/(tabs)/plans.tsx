@@ -86,7 +86,7 @@ const GLOBAL_HUBS: GlobalHub[] = [
   },
 ];
 
-const POPULAR_COUNTRIES = [
+export const POPULAR_COUNTRIES = [
   { code: 'GH', name: 'Ghana' },
   { code: 'US', name: 'United States' },
   { code: 'GB', name: 'United Kingdom' },
