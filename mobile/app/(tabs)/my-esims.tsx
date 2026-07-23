@@ -38,25 +38,6 @@ function formatExpiry(minutes?: number, days?: number): string {
   return remH > 0 ? `${d} Days ${remH}h` : `${d} Days`;
 }
 
-function formatPaymentDate(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return iso;
-  }
-}
-
-function formatPlanLabel(planName: string | null, planId: string): string {
-  if (planName) return planName;
-  return planId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function formatAmount(amountGhs: number | null): string {
-  if (amountGhs == null) return '—';
-  return `GHS ${amountGhs.toFixed(2)}`;
-}
-
 function DataUsageRing({ usage }: { usage: UsageData | null }) {
   const size = 96;
   const cx = 48, cy = 48, r = 36, sw = 10;
@@ -427,26 +408,25 @@ function SwipeableEsimCard({
 }
 
 export default function MyEsimsScreen() {
-  const { activeEsims, pastEsims, token, fetchEsims, user, payments, fetchPayments } = useApp();
+  const { activeEsims, token, fetchEsims, user } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [localActiveEsims, setLocalActiveEsims] = useState<ESimSubscription[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [showAllPayments, setShowAllPayments] = useState(false);
 
   useEffect(() => { setLocalActiveEsims(activeEsims); }, [activeEsims]);
 
   useEffect(() => {
     if (token) {
-      Promise.all([fetchEsims(token), fetchPayments(token)]).finally(() => setIsLoading(false));
+      fetchEsims(token).finally(() => setIsLoading(false));
     } else {
       const t = setTimeout(() => setIsLoading(false), 600);
       return () => clearTimeout(t);
     }
-  }, [token, fetchEsims, fetchPayments]);
+  }, [token, fetchEsims]);
 
   const handleRefresh = async () => {
     setIsLoading(true);
-    if (token) await Promise.all([fetchEsims(token), fetchPayments(token)]);
+    if (token) await fetchEsims(token);
     setIsLoading(false);
   };
 
@@ -465,10 +445,6 @@ export default function MyEsimsScreen() {
             {user.fullName ? `${user.fullName.split(' ')[0]}'s Dashboard` : 'My Dashboard'}
           </Text>
           <Text style={styles.headerSub} numberOfLines={2}>Manage your global connectivity network accounts.</Text>
-          <View style={styles.activePill}>
-            <View style={styles.activeDot} />
-            <Text style={styles.activePillText}>SIMFINITY ACTIVE</Text>
-          </View>
         </View>
         <Pressable
           style={({ pressed }) => [styles.refreshBtn, isLoading && { opacity: 0.5 }, pressed && styles.btnPressed]}
@@ -563,98 +539,6 @@ export default function MyEsimsScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Previous Plans */}
-        <Text style={styles.sectionHeading}>Previous Plans</Text>
-
-        {isLoading ? (
-          [0, 1].map(i => (
-            <View key={i} style={[glass.panel, styles.pastSkeleton]}>
-              <SkeletonBox width={160} height={13} />
-              <SkeletonBox width={80} height={11} style={{ marginTop: 6 }} />
-            </View>
-          ))
-        ) : pastEsims.length === 0 ? (
-          <View style={[glass.panel, styles.emptyCard]}>
-            <Text style={styles.emptyText}>No previous plan entries found.</Text>
-          </View>
-        ) : (
-          pastEsims.map(esim => (
-            <View key={esim.id} style={[glass.panel, styles.pastCard]}>
-              <View style={styles.pastLeft}>
-                <View style={styles.pastDot} />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.pastName} numberOfLines={2}>{esim.planName}</Text>
-                  <Text style={styles.pastDate}>
-                    {esim.completedDate ? `Completed on ${esim.completedDate}` : 'Completed'}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.pastRight}>
-                <Text style={styles.pastData}>{esim.totalDataGb}</Text>
-                <Text style={styles.pastStatus}>Usage Complete</Text>
-              </View>
-            </View>
-          ))
-        )}
-
-        <View style={styles.divider} />
-
-        {/* Payment History */}
-        <Text style={styles.sectionHeading}>Payment History</Text>
-
-        {isLoading ? (
-          [0, 1].map(i => (
-            <View key={i} style={[glass.panel, styles.pastSkeleton]}>
-              <SkeletonBox width={160} height={13} />
-              <SkeletonBox width={80} height={11} style={{ marginTop: 6 }} />
-            </View>
-          ))
-        ) : payments.length === 0 ? (
-          <View style={[glass.panel, styles.emptyCard]}>
-            <Text style={styles.emptyText}>No payment records found.</Text>
-          </View>
-        ) : (
-          <>
-            {(showAllPayments ? payments : payments.slice(0, 2)).map(payment => (
-              <View key={payment.id} style={[glass.panel, styles.paymentCard]}>
-                <View style={styles.paymentLeft}>
-                  <View style={styles.paymentIconCircle}>
-                    <Text style={styles.paymentIconText}>₵</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.paymentPlanName} numberOfLines={1}>
-                      {formatPlanLabel(payment.planName, payment.planId)}
-                    </Text>
-                    <Text style={styles.paymentDate}>{formatPaymentDate(payment.createdAt)}</Text>
-                  </View>
-                </View>
-                <View style={styles.paymentRight}>
-                  <Text style={styles.paymentAmount}>{formatAmount(payment.amountGhs)}</Text>
-                  <View style={styles.paymentStatusBadge}>
-                    <Text style={styles.paymentStatusText}>
-                      {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-            {payments.length > 2 && (
-              <Pressable
-                style={({ pressed }) => [styles.seeMoreBtn, pressed && styles.btnPressed]}
-                onPress={() => setShowAllPayments(s => !s)}
-              >
-                <Text style={styles.seeMoreText}>
-                  {showAllPayments
-                    ? '↑ Show Less'
-                    : `↓ See ${payments.length - 2} more payment${payments.length - 2 > 1 ? 's' : ''}`}
-                </Text>
-              </Pressable>
-            )}
-          </>
-        )}
-
         {/* Refer a Friend Banner */}
         <Pressable
           style={({ pressed }) => [styles.referBanner, pressed && { opacity: 0.85 }]}
@@ -694,21 +578,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: COLORS.gold, fontSize: 20, fontWeight: '800' },
   headerSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,107,63,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,107,63,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.greenLight },
-  activePillText: { color: COLORS.greenLight, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   refreshBtn: {
     width: 36,
     height: 36,
@@ -758,7 +627,6 @@ const styles = StyleSheet.create({
 
   skeletonCard: { padding: 18, gap: 12 },
   skeletonRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  pastSkeleton: { padding: 14, gap: 6 },
 
   // Swipe container
   swipeWrap: { borderRadius: 16, overflow: 'hidden' },
@@ -954,59 +822,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  divider: { height: 1, backgroundColor: 'rgba(77,71,50,0.3)', marginVertical: 4 },
-
   emptyCard: { padding: 24, alignItems: 'center' },
   emptyText: { color: COLORS.textMuted, fontSize: 13 },
-
-  pastCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-    borderLeftWidth: 2,
-    borderLeftColor: COLORS.border,
-  },
-  pastLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
-  pastDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.textDim },
-  pastName: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  pastDate: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
-  pastRight: { alignItems: 'flex-end' },
-  pastData: { color: COLORS.textMuted, fontSize: 12, fontWeight: '700' },
-  pastStatus: { color: COLORS.textDim, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
-
-  // Payment history
-  paymentCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-  },
-  paymentLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
-  paymentIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paymentIconText: { color: COLORS.gold, fontSize: 14, fontWeight: '800' },
-  paymentPlanName: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  paymentDate: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
-  paymentRight: { alignItems: 'flex-end', gap: 4 },
-  paymentAmount: { color: COLORS.gold, fontSize: 13, fontWeight: '800' },
-  paymentStatusBadge: {
-    backgroundColor: 'rgba(0,107,63,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,107,63,0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-  },
-  paymentStatusText: { color: COLORS.greenLight, fontSize: 9, fontWeight: '800' },
 
   referBanner: { borderRadius: 16, overflow: 'hidden', height: 144, borderWidth: 1, borderColor: 'rgba(255,215,0,0.1)' },
   referBg: { flex: 1, justifyContent: 'flex-end' },

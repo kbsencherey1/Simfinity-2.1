@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,15 +10,79 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AvatarImage } from '../../components/AvatarImage';
+import { SkeletonBox } from '../../components/Skeleton';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
 import { useApp, CURRENCIES } from '../../context/AppContext';
 import { API_BASE } from '../../config';
 
+function formatPaymentDate(iso: string | null): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
+function formatPlanLabel(planName: string | null, planId: string): string {
+  if (planName) return planName;
+  return planId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatAmount(amountGhs: number | null): string {
+  if (amountGhs == null) return '—';
+  return `GHS ${amountGhs.toFixed(2)}`;
+}
+
+function DropdownSection({
+  title,
+  subtitle,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={[glass.panel, styles.dropdownCard]}>
+      <Pressable style={styles.dropdownHeader} onPress={onToggle}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.dropdownTitle}>{title}</Text>
+          {subtitle && <Text style={styles.dropdownSub}>{subtitle}</Text>}
+        </View>
+        <Text style={styles.dropdownChevron}>{isOpen ? '▲' : '▼'}</Text>
+      </Pressable>
+      {isOpen && <View style={styles.dropdownBody}>{children}</View>}
+    </View>
+  );
+}
+
 export default function AccountScreen() {
-  const { user, isLoggedIn, logout, token, userId, avatarUrl, setAvatarUrl, currency, setCurrency } = useApp();
+  const {
+    user, isLoggedIn, logout, token, userId, avatarUrl, setAvatarUrl, currency, setCurrency,
+    pastEsims, payments, fetchEsims, fetchPayments,
+  } = useApp();
   const [uploading, setUploading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [pastPlansOpen, setPastPlansOpen] = useState(false);
+  const [paymentsOpen, setPaymentsOpen] = useState(false);
+  const [showAllPayments, setShowAllPayments] = useState(false);
+  const [showAllPastPlans, setShowAllPastPlans] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      Promise.all([fetchEsims(token), fetchPayments(token)]).finally(() => setHistoryLoading(false));
+    } else {
+      setHistoryLoading(false);
+    }
+  }, [token, fetchEsims, fetchPayments]);
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -125,9 +189,6 @@ export default function AccountScreen() {
             style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
             onPress={() => router.push('/personal-info')}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: 'rgba(255,215,0,0.1)', borderColor: 'rgba(255,215,0,0.25)' }]}>
-              <Text style={[styles.menuIconLetter, { color: COLORS.gold }]}>P</Text>
-            </View>
             <View style={styles.menuItemText}>
               <Text style={styles.menuLabel}>Personal Information</Text>
               <Text style={styles.menuSub}>Edit custom details and cellular configs</Text>
@@ -138,9 +199,6 @@ export default function AccountScreen() {
           <View style={styles.menuDivider} />
 
           <View style={styles.menuItem}>
-            <View style={[styles.menuIconBox, { backgroundColor: 'rgba(255,215,0,0.06)', borderColor: 'rgba(255,215,0,0.15)' }]}>
-              <Text style={[styles.menuIconLetter, { color: COLORS.textDim }]}>S</Text>
-            </View>
             <View style={styles.menuItemText}>
               <Text style={styles.menuLabel}>Privacy & Security</Text>
               <Text style={styles.menuSub}>ENCRYPTED CODES: SHA-256 enabled</Text>
@@ -150,9 +208,12 @@ export default function AccountScreen() {
         </View>
 
         {/* Currency Preference */}
-        <View style={[glass.panel, styles.currencyCard]}>
-          <Text style={styles.currencyCardTitle}>CURRENCY PREFERENCE</Text>
-          <Text style={styles.currencyCardSub}>Prices display in your selected currency</Text>
+        <DropdownSection
+          title="Currency Preference"
+          subtitle={`Currently ${currency} — tap to change`}
+          isOpen={currencyOpen}
+          onToggle={() => setCurrencyOpen(o => !o)}
+        >
           <View style={styles.currencyGrid}>
             {CURRENCIES.map(c => (
               <Pressable
@@ -173,7 +234,119 @@ export default function AccountScreen() {
               </Pressable>
             ))}
           </View>
-        </View>
+        </DropdownSection>
+
+        {/* Previous Plans */}
+        <DropdownSection
+          title="Previous Plans"
+          subtitle={`${pastEsims.length} completed plan${pastEsims.length === 1 ? '' : 's'}`}
+          isOpen={pastPlansOpen}
+          onToggle={() => setPastPlansOpen(o => !o)}
+        >
+          {historyLoading ? (
+            [0, 1].map(i => (
+              <View key={i} style={[glass.panel, styles.pastSkeleton]}>
+                <SkeletonBox width={160} height={13} />
+                <SkeletonBox width={80} height={11} style={{ marginTop: 6 }} />
+              </View>
+            ))
+          ) : pastEsims.length === 0 ? (
+            <View style={[glass.panel, styles.emptyCard]}>
+              <Text style={styles.emptyText}>No previous plan entries found.</Text>
+            </View>
+          ) : (
+            <>
+              {(showAllPastPlans ? pastEsims : pastEsims.slice(0, 2)).map(esim => (
+                <View key={esim.id} style={[glass.panel, styles.pastCard]}>
+                  <View style={styles.pastLeft}>
+                    <View style={styles.pastDot} />
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.pastName} numberOfLines={2}>{esim.planName}</Text>
+                      <Text style={styles.pastDate}>
+                        {esim.completedDate ? `Completed on ${esim.completedDate}` : 'Completed'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.pastRight}>
+                    <Text style={styles.pastData}>{esim.totalDataGb}</Text>
+                    <Text style={styles.pastStatus}>Usage Complete</Text>
+                  </View>
+                </View>
+              ))}
+              {pastEsims.length > 2 && (
+                <Pressable
+                  style={({ pressed }) => [styles.seeMoreBtn, pressed && { opacity: 0.7 }]}
+                  onPress={() => setShowAllPastPlans(s => !s)}
+                >
+                  <Text style={styles.seeMoreText}>
+                    {showAllPastPlans
+                      ? '↑ Show Less'
+                      : `↓ See ${pastEsims.length - 2} more plan${pastEsims.length - 2 > 1 ? 's' : ''}`}
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+        </DropdownSection>
+
+        {/* Payment History */}
+        <DropdownSection
+          title="Payment History"
+          subtitle={`${payments.length} payment${payments.length === 1 ? '' : 's'} on record`}
+          isOpen={paymentsOpen}
+          onToggle={() => setPaymentsOpen(o => !o)}
+        >
+          {historyLoading ? (
+            [0, 1].map(i => (
+              <View key={i} style={[glass.panel, styles.pastSkeleton]}>
+                <SkeletonBox width={160} height={13} />
+                <SkeletonBox width={80} height={11} style={{ marginTop: 6 }} />
+              </View>
+            ))
+          ) : payments.length === 0 ? (
+            <View style={[glass.panel, styles.emptyCard]}>
+              <Text style={styles.emptyText}>No payment records found.</Text>
+            </View>
+          ) : (
+            <>
+              {(showAllPayments ? payments : payments.slice(0, 2)).map(payment => (
+                <View key={payment.id} style={[glass.panel, styles.paymentCard]}>
+                  <View style={styles.paymentLeft}>
+                    <View style={styles.paymentIconCircle}>
+                      <Text style={styles.paymentIconText}>₵</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.paymentPlanName} numberOfLines={1}>
+                        {formatPlanLabel(payment.planName, payment.planId)}
+                      </Text>
+                      <Text style={styles.paymentDate}>{formatPaymentDate(payment.createdAt)}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.paymentRight}>
+                    <Text style={styles.paymentAmount}>{formatAmount(payment.amountGhs)}</Text>
+                    <View style={styles.paymentStatusBadge}>
+                      <Text style={styles.paymentStatusText}>
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+              {payments.length > 2 && (
+                <Pressable
+                  style={({ pressed }) => [styles.seeMoreBtn, pressed && { opacity: 0.7 }]}
+                  onPress={() => setShowAllPayments(s => !s)}
+                >
+                  <Text style={styles.seeMoreText}>
+                    {showAllPayments
+                      ? '↑ Show Less'
+                      : `↓ See ${payments.length - 2} more payment${payments.length - 2 > 1 ? 's' : ''}`}
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+        </DropdownSection>
 
         <Pressable
           style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
@@ -262,15 +435,6 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
   menuItemPressed: { backgroundColor: 'rgba(255,215,0,0.04)' },
   menuDivider: { height: 1, backgroundColor: 'rgba(77,71,50,0.25)' },
-  menuIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuIconLetter: { fontSize: 13, fontWeight: '900' },
   menuItemText: { flex: 1 },
   menuLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
   menuSub: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
@@ -291,10 +455,76 @@ const styles = StyleSheet.create({
   logoutBtnPressed: { backgroundColor: 'rgba(204,78,60,0.22)', transform: [{ scale: 0.98 }] },
   logoutText: { color: '#cc4e3c', fontWeight: '700', fontSize: 15 },
 
-  currencyCard: { padding: 16, gap: 10 },
-  currencyCardTitle: { color: COLORS.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  currencyCardSub: { color: COLORS.textDim, fontSize: 11, marginTop: -6 },
-  currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  dropdownCard: { padding: 0, overflow: 'hidden' },
+  dropdownHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 10 },
+  dropdownTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  dropdownSub: { color: COLORS.textDim, fontSize: 11, marginTop: 2 },
+  dropdownChevron: { color: COLORS.gold, fontSize: 11 },
+  dropdownBody: { padding: 16, paddingTop: 0, gap: 8 },
+
+  pastSkeleton: { padding: 14, gap: 6 },
+  emptyCard: { padding: 24, alignItems: 'center' },
+  emptyText: { color: COLORS.textMuted, fontSize: 13 },
+
+  pastCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderLeftWidth: 2,
+    borderLeftColor: COLORS.border,
+  },
+  pastLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  pastDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.textDim },
+  pastName: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  pastDate: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
+  pastRight: { alignItems: 'flex-end' },
+  pastData: { color: COLORS.textMuted, fontSize: 12, fontWeight: '700' },
+  pastStatus: { color: COLORS.textDim, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
+
+  paymentCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+  },
+  paymentLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  paymentIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentIconText: { color: COLORS.gold, fontSize: 14, fontWeight: '800' },
+  paymentPlanName: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  paymentDate: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
+  paymentRight: { alignItems: 'flex-end', gap: 4 },
+  paymentAmount: { color: COLORS.gold, fontSize: 13, fontWeight: '800' },
+  paymentStatusBadge: {
+    backgroundColor: 'rgba(0,107,63,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,107,63,0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  paymentStatusText: { color: COLORS.greenLight, fontSize: 9, fontWeight: '800' },
+
+  seeMoreBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.2)',
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,215,0,0.04)',
+  },
+  seeMoreText: { color: COLORS.gold, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+
+  currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   currencyChip: {
     paddingHorizontal: 10,
     paddingVertical: 7,

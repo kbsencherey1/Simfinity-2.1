@@ -146,23 +146,14 @@ export default function CheckoutScreen() {
 
           <View style={styles.planStatsRow}>
             <View style={styles.planStat}>
-              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-                <Text style={styles.planStatIconText}>D</Text>
-              </View>
               <Text style={styles.planStatValue}>{plan.dataGb}</Text>
               <Text style={styles.planStatLabel}>Data</Text>
             </View>
             <View style={styles.planStat}>
-              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(148,236,180,0.1)' }]}>
-                <Text style={[styles.planStatIconText, { color: COLORS.greenLight }]}>V</Text>
-              </View>
               <Text style={styles.planStatValue}>{plan.validityDays}d</Text>
               <Text style={styles.planStatLabel}>Validity</Text>
             </View>
             <View style={styles.planStat}>
-              <View style={[styles.planStatIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-                <Text style={styles.planStatIconText}>5G</Text>
-              </View>
               <Text style={styles.planStatValue} numberOfLines={2}>{plan.speed}</Text>
               <Text style={styles.planStatLabel}>Speed</Text>
             </View>
@@ -171,31 +162,17 @@ export default function CheckoutScreen() {
 
         {/* Specs bento */}
         <View style={styles.bentoRow}>
-          {[
-            { letter: 'N', color: '#cc4e3c', bg: 'rgba(204,78,60,0.1)', text: plan.speed },
-            { letter: '24', color: COLORS.gold, bg: 'rgba(255,215,0,0.08)', text: '24/7 Priority Support' },
-            { letter: 'F', color: COLORS.greenLight, bg: 'rgba(148,236,180,0.08)', text: 'Instant Setup' },
-          ].map(s => (
-            <View key={s.text} style={[glass.panel, styles.bento]}>
-              <View style={[styles.bentoIconBox, { backgroundColor: s.bg }]}>
-                <Text style={[styles.bentoIconText, { color: s.color }]}>{s.letter}</Text>
-              </View>
-              <Text style={styles.bentoText}>{s.text}</Text>
+          {[plan.speed, '24/7 Priority Support', 'Instant Setup'].map(text => (
+            <View key={text} style={[glass.panel, styles.bento]}>
+              <Text style={styles.bentoText}>{text}</Text>
             </View>
           ))}
         </View>
 
         {/* Cultural insight */}
         <View style={[glass.panel, styles.culturalCard]}>
-          <View style={styles.culturalIconRow}>
-            <View style={styles.culturalIcon}>
-              <Text style={styles.culturalIconLetter}>C</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.culturalLabel}>CULTURAL INSIGHT</Text>
-              <Text style={styles.culturalTitle}>{plan.culturalInsightTitle}</Text>
-            </View>
-          </View>
+          <Text style={styles.culturalLabel}>CULTURAL INSIGHT</Text>
+          <Text style={styles.culturalTitle}>{plan.culturalInsightTitle}</Text>
           <Text style={styles.culturalDesc}>{plan.culturalInsightDesc}</Text>
         </View>
 
@@ -317,35 +294,14 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   planStat: { alignItems: 'center', gap: 6, flex: 1 },
-  planStatIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  planStatIconText: { color: COLORS.gold, fontSize: 10, fontWeight: '900' },
   planStatValue: { color: '#fff', fontSize: 12, fontWeight: '800', textAlign: 'center' },
   planStatLabel: { color: COLORS.textDim, fontSize: 9, fontWeight: '600' },
 
   bentoRow: { flexDirection: 'row', gap: 10 },
   bento: { flex: 1, padding: 12, alignItems: 'center', gap: 6 },
-  bentoIconBox: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  bentoIconText: { fontSize: 10, fontWeight: '900' },
   bentoText: { color: COLORS.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center' },
 
   culturalCard: { padding: 16, gap: 10, borderLeftWidth: 3, borderLeftColor: COLORS.gold },
-  culturalIconRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  culturalIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  culturalIconLetter: { color: COLORS.gold, fontSize: 14, fontWeight: '900' },
   culturalLabel: { color: COLORS.gold, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   culturalTitle: { color: '#fff', fontSize: 13, fontWeight: '700', marginTop: 2 },
   culturalDesc: { color: COLORS.textMuted, fontSize: 11, lineHeight: 17 },

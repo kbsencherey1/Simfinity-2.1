@@ -65,14 +65,6 @@ export default function TravelDocsScreen() {
     }, 2500);
   };
 
-  const getDocIcon = (category: string) => {
-    if (category.includes('Passport')) return 'P';
-    if (category.includes('Visa')) return 'V';
-    if (category.includes('Fever') || category.includes('Yellow')) return 'YF';
-    if (category.includes('Insurance')) return 'I';
-    return 'D';
-  };
-
   return (
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.header}>
@@ -95,9 +87,6 @@ export default function TravelDocsScreen() {
         {/* Passport Certificate */}
         <View style={[glass.panel, styles.section]}>
           <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconBox}>
-              <Text style={styles.sectionIconText}>P</Text>
-            </View>
             <Text style={styles.sectionTitle}>Passport Certificate</Text>
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedBadgeText}>VERIFIED</Text>
@@ -120,9 +109,6 @@ export default function TravelDocsScreen() {
         {/* Active Visitor Visas */}
         <View style={[glass.panel, styles.section]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconBox, { backgroundColor: 'rgba(148,236,180,0.1)' }]}>
-              <Text style={[styles.sectionIconText, { color: COLORS.greenLight }]}>V</Text>
-            </View>
             <Text style={styles.sectionTitle}>Active Visitor Visas</Text>
           </View>
           <View style={styles.visaList}>
@@ -147,25 +133,16 @@ export default function TravelDocsScreen() {
         {/* Health Verification */}
         <View style={[glass.panel, styles.section]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconBox, { backgroundColor: 'rgba(204,78,60,0.1)' }]}>
-              <Text style={[styles.sectionIconText, { color: '#cc4e3c' }]}>H</Text>
-            </View>
             <Text style={styles.sectionTitle}>Health Verification Certificates</Text>
           </View>
           <View style={styles.healthGrid}>
             <View style={styles.healthItem}>
-              <View style={[styles.healthIcon, { backgroundColor: 'rgba(204,78,60,0.1)' }]}>
-                <Text style={[styles.healthIconText, { color: '#cc4e3c' }]}>YF</Text>
-              </View>
               <View>
                 <Text style={styles.healthName}>Yellow Fever Card</Text>
                 <Text style={[styles.healthStatus, { color: COLORS.greenLight }]}>Verified WHO</Text>
               </View>
             </View>
             <View style={styles.healthItem}>
-              <View style={[styles.healthIcon, { backgroundColor: 'rgba(100,100,100,0.1)' }]}>
-                <Text style={[styles.healthIconText, { color: COLORS.textMuted }]}>CV</Text>
-              </View>
               <View>
                 <Text style={styles.healthName}>COVID-19 Cert</Text>
                 <Text style={[styles.healthStatus, { color: COLORS.textDim }]}>Fully Vaccinated</Text>
@@ -192,9 +169,6 @@ export default function TravelDocsScreen() {
         {/* Upload Card */}
         <View style={[glass.panel, styles.uploadCard]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconBox, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-              <Text style={[styles.sectionIconText, { color: COLORS.gold }]}>U</Text>
-            </View>
             <Text style={styles.sectionTitle}>Upload Traveler Credentials</Text>
           </View>
           <Text style={styles.uploadDesc}>
@@ -233,9 +207,6 @@ export default function TravelDocsScreen() {
             style={({ pressed }) => [styles.uploadZone, pressed && styles.uploadZonePressed]}
             onPress={handleSimulateUpload}
           >
-            <View style={styles.uploadZoneIcon}>
-              <Text style={styles.uploadZoneIconText}>U</Text>
-            </View>
             <Text style={styles.uploadZoneTitle}>Drop your documentation file</Text>
             <Text style={styles.uploadZoneSub}>Tap to simulate upload • PNG, JPG or PDF (Max 10MB)</Text>
           </Pressable>
@@ -245,17 +216,11 @@ export default function TravelDocsScreen() {
         {uploadedDocs.length > 0 && (
           <View style={[glass.panel, styles.section]}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconBox, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-                <Text style={[styles.sectionIconText, { color: COLORS.gold }]}>F</Text>
-              </View>
               <Text style={styles.sectionTitle}>Your Submitted Documents ({uploadedDocs.length})</Text>
             </View>
             <View style={styles.docList}>
               {uploadedDocs.map(doc => (
                 <View key={doc.id} style={styles.docRow}>
-                  <View style={styles.docIconBox}>
-                    <Text style={styles.docIconText}>{getDocIcon(doc.category)}</Text>
-                  </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={styles.docMeta}>
                       <View style={styles.docCategoryBadge}>
@@ -313,15 +278,6 @@ const styles = StyleSheet.create({
 
   section: { padding: 16, gap: 12 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionIconText: { color: COLORS.gold, fontSize: 11, fontWeight: '900' },
   sectionTitle: { color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 },
   verifiedBadge: {
     backgroundColor: 'rgba(255,215,0,0.1)',
@@ -377,8 +333,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  healthIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  healthIconText: { fontSize: 9, fontWeight: '900' },
   healthName: { color: '#fff', fontSize: 11, fontWeight: '700' },
   healthStatus: { fontSize: 9, marginTop: 2 },
 
@@ -442,15 +396,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.2)',
   },
   uploadZonePressed: { borderColor: COLORS.gold, backgroundColor: 'rgba(255,215,0,0.04)' },
-  uploadZoneIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadZoneIconText: { color: COLORS.gold, fontSize: 18, fontWeight: '900' },
   uploadZoneTitle: { color: '#fff', fontSize: 13, fontWeight: '700' },
   uploadZoneSub: { color: COLORS.textDim, fontSize: 11, textAlign: 'center' },
 
@@ -465,16 +410,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  docIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  docIconText: { color: COLORS.textDim, fontSize: 9, fontWeight: '900' },
   docMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   docCategoryBadge: { backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   docCategoryText: { color: '#fff', fontSize: 8, fontWeight: '800', textTransform: 'uppercase' },

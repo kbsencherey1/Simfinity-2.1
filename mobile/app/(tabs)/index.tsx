@@ -14,21 +14,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SimfinityNavbarLogo } from '../../components/SimfinityLogo';
 import { COLORS, glass } from '../../components/styles';
 import { HERITAGE_IMAGES } from '../../data';
-import { useApp } from '../../context/AppContext';
 
 import { API_BASE } from '../../config';
 
 const SAMPLE_COUNTRIES = ['Kenya', 'South Africa', 'Nigeria', 'Japan', 'Brazil', 'Morocco', 'India', 'France'];
 
 const TOUR_HIGHLIGHTS = [
-  { label: 'S', color: '#ffd700', title: 'Instant eSIM Setup', desc: 'Activate your eSIM in under 60 seconds, no physical SIM needed.' },
-  { label: 'G', color: '#94ecb4', title: '190+ Countries', desc: 'One eSIM covers everywhere from Accra to Tokyo to New York.' },
-  { label: 'R', color: '#ffd700', title: 'Ghana Rooted', desc: 'Built in Accra with deep pride in West African connectivity culture.' },
-  { label: 'P', color: '#94ecb4', title: 'Paystack Secured', desc: 'All payments go through Ghana-trusted Paystack gateway.' },
+  { title: 'Instant eSIM Setup', desc: 'Activate your eSIM in under 60 seconds, no physical SIM needed.' },
+  { title: '190+ Countries', desc: 'One eSIM covers everywhere from Accra to Tokyo to New York.' },
+  { title: 'Ghana Rooted', desc: 'Built in Accra with deep pride in West African connectivity culture.' },
+  { title: 'Paystack Secured', desc: 'All payments go through Ghana-trusted Paystack gateway.' },
 ];
 
 export default function HomeScreen() {
-  const { isLoggedIn } = useApp();
   const [insight, setInsight] = useState<{ country: string; title: string; fact: string; sources?: { title: string; url: string }[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,22 +65,13 @@ export default function HomeScreen() {
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.header}>
         <Pressable onPress={() => router.push('/(tabs)')}>
-          <SimfinityNavbarLogo size={28} />
-        </Pressable>
-        <Pressable
-          onPress={() => router.push(isLoggedIn ? '/(tabs)/account' : '/login')}
-          style={({ pressed }) => [styles.headerActionBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.headerAction}>{isLoggedIn ? 'Account' : 'Sign In'}</Text>
+          <SimfinityNavbarLogo size={64} />
         </Pressable>
       </SafeAreaView>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
         {/* Welcome Banner */}
         <View style={[glass.panel, styles.welcomeCard]}>
-          <View style={styles.updatedBadge}>
-            <Text style={styles.updatedText}>UPDATED TOUR AVAILABLE</Text>
-          </View>
           <Text style={styles.welcomeTitle}>Simfinity Global</Text>
           <Text style={styles.welcomeSub}>
             Seamless travel eSIM coverage across beautiful Ghana, designed with local pride.
@@ -202,14 +191,11 @@ export default function HomeScreen() {
         {/* Feature bento */}
         <View style={styles.bentoRow}>
           {[
-            { accent: '#ffd700', label: 'S', title: 'Instant Setup', desc: 'Connect in under 60 seconds of scan.' },
-            { accent: '#94ecb4', label: 'C', title: 'Dual Currency', desc: 'GHS MoMo or Global Credit Cards.' },
-            { accent: '#ffd700', label: '24', title: '24/7 Support', desc: 'Our team operates out of Accra.' },
+            { title: 'Instant Setup', desc: 'Connect in under 60 seconds of scan.' },
+            { title: 'Dual Currency', desc: 'GHS MoMo or Global Credit Cards.' },
+            { title: '24/7 Support', desc: 'Our team operates out of Accra.' },
           ].map(f => (
             <View key={f.title} style={[glass.panel, styles.bentoCard]}>
-              <View style={[styles.bentoAccent, { backgroundColor: f.accent + '22', borderColor: f.accent + '44' }]}>
-                <Text style={[styles.bentoAccentText, { color: f.accent }]}>{f.label}</Text>
-              </View>
               <Text style={styles.bentoTitle}>{f.title}</Text>
               <Text style={styles.bentoDesc}>{f.desc}</Text>
             </View>
@@ -219,23 +205,14 @@ export default function HomeScreen() {
         {/* Authentic & Secure bottom bar */}
         <View style={styles.secureBar}>
           <View style={styles.secureItem}>
-            <View style={[styles.secureIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-              <Text style={[styles.secureIconText, { color: COLORS.gold }]}>A</Text>
-            </View>
             <Text style={styles.secureLabel}>Authentic</Text>
           </View>
           <View style={styles.secureDivider} />
           <View style={styles.secureItem}>
-            <View style={[styles.secureIcon, { backgroundColor: 'rgba(148,236,180,0.1)' }]}>
-              <Text style={[styles.secureIconText, { color: COLORS.greenLight }]}>S</Text>
-            </View>
             <Text style={styles.secureLabel}>Secure</Text>
           </View>
           <View style={styles.secureDivider} />
           <View style={styles.secureItem}>
-            <View style={[styles.secureIcon, { backgroundColor: 'rgba(255,215,0,0.1)' }]}>
-              <Text style={[styles.secureIconText, { color: COLORS.gold }]}>G</Text>
-            </View>
             <Text style={styles.secureLabel}>Ghana Rooted</Text>
           </View>
         </View>
@@ -263,9 +240,6 @@ export default function HomeScreen() {
             <ScrollView style={{ marginTop: 16 }} showsVerticalScrollIndicator={false}>
               {TOUR_HIGHLIGHTS.map(h => (
                 <View key={h.title} style={styles.tourItem}>
-                  <View style={[styles.tourIcon, { backgroundColor: h.color + '18', borderColor: h.color + '40' }]}>
-                    <Text style={[styles.tourIconText, { color: h.color }]}>{h.label}</Text>
-                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.tourItemTitle}>{h.title}</Text>
                     <Text style={styles.tourItemDesc}>{h.desc}</Text>
@@ -295,26 +269,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  headerActionBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.25)',
-  },
-  headerAction: { color: COLORS.gold, fontSize: 12, fontWeight: '700' },
   pressed: { opacity: 0.6 },
   scroll: { padding: 16, gap: 16, paddingBottom: 32 },
 
   welcomeCard: { padding: 20, gap: 10 },
-  updatedBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(204,78,60,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  updatedText: { color: '#cc4e3c', fontSize: 9, fontWeight: '700', letterSpacing: 1 },
   welcomeTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
   welcomeSub: { color: COLORS.textMuted, fontSize: 13, lineHeight: 20 },
   welcomeBtnRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
@@ -405,15 +363,6 @@ const styles = StyleSheet.create({
 
   bentoRow: { flexDirection: 'row', gap: 10 },
   bentoCard: { flex: 1, padding: 14, gap: 8, alignItems: 'center' },
-  bentoAccent: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bentoAccentText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
   bentoTitle: { color: '#fff', fontSize: 12, fontWeight: '700', textAlign: 'center' },
   bentoDesc: { color: COLORS.textMuted, fontSize: 10, textAlign: 'center', lineHeight: 15 },
 
@@ -427,14 +376,6 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(77,71,50,0.2)',
   },
   secureItem: { alignItems: 'center', gap: 6 },
-  secureIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secureIconText: { fontSize: 12, fontWeight: '900' },
   secureLabel: { color: COLORS.textDim, fontSize: 10, fontWeight: '600', letterSpacing: 0.5 },
   secureDivider: { width: 1, height: 30, backgroundColor: 'rgba(77,71,50,0.3)' },
 
@@ -458,16 +399,6 @@ const styles = StyleSheet.create({
   modalCloseText: { color: COLORS.gold, fontSize: 12, fontWeight: '700' },
   modalSub: { color: COLORS.textMuted, fontSize: 12, marginTop: 6 },
   tourItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 18 },
-  tourIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  tourIconText: { fontSize: 13, fontWeight: '900' },
   tourItemTitle: { color: '#fff', fontSize: 13, fontWeight: '700', marginBottom: 3 },
   tourItemDesc: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18 },
   tourGetStarted: {
