@@ -65,10 +65,10 @@ export default function PersonalInfoScreen() {
     setPickerOpen(null);
   };
 
-  const textFields: { key: keyof typeof form; label: string; placeholder: string; icon: string }[] = [
-    { key: 'fullName', label: 'Full Name', placeholder: 'Kwame Mensah', icon: 'N' },
+  const textFields: { key: keyof typeof form; label: string; placeholder: string; icon?: string }[] = [
+    { key: 'fullName', label: 'Full Name', placeholder: 'Kwame Mensah' },
     { key: 'email', label: 'Email Address', placeholder: 'kwame@example.com', icon: '@' },
-    { key: 'phoneNumber', label: 'Phone Number', placeholder: '+233 24 555 0123', icon: 'T' },
+    { key: 'phoneNumber', label: 'Phone Number', placeholder: '+233 24 555 0123' },
   ];
 
   return (
@@ -118,9 +118,11 @@ export default function PersonalInfoScreen() {
               <View key={f.key} style={styles.field}>
                 <Text style={styles.label}>{f.label.toUpperCase()}</Text>
                 <View style={glass.input}>
-                  <View style={styles.inputIconBox}>
-                    <Text style={styles.inputIconText}>{f.icon}</Text>
-                  </View>
+                  {f.icon === '@' && (
+                    <View style={styles.inputIconBox}>
+                      <Text style={styles.inputIconText}>{f.icon}</Text>
+                    </View>
+                  )}
                   <TextInput
                     style={styles.inputText}
                     value={form[f.key] as string}

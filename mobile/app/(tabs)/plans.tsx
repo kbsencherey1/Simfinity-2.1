@@ -103,6 +103,12 @@ export const POPULAR_COUNTRIES = [
   { code: 'MX', name: 'Mexico' },
 ];
 
+// Plans store their size as e.g. "5 GB" or "2GB Data" — pull out just the number.
+function parseDataGbValue(dataGb: string): number {
+  const match = dataGb.match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : NaN;
+}
+
 export default function PlansScreen() {
   const { setCheckoutPlan, currency, exchangeRates, topUpEsim, setTopUpEsim } = useApp();
   const [plans, setPlans] = useState<ESimPlan[]>([]);
@@ -159,10 +165,18 @@ export default function PlansScreen() {
 
   useEffect(() => { fetchPlans(selectedCountry); }, [selectedCountry]);
 
+  // A pure number (e.g. "5") is treated as a GB search: match plans by exact
+  // data amount instead of substring, so "5" doesn't also pull in "5G" speed
+  // or a "50 GB" plan.
+  const trimmedSearch = searchTerm.trim();
+  const searchedGb = /^\d+(\.\d+)?$/.test(trimmedSearch) ? parseFloat(trimmedSearch) : null;
+
   let filtered = plans.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.dataGb.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.speed.toLowerCase().includes(searchTerm.toLowerCase())
+    searchedGb !== null
+      ? parseDataGbValue(p.dataGb) === searchedGb
+      : p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.dataGb.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.speed.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortRate = currency === 'GHS' ? 1 : (exchangeRates[currency] ?? 1);
@@ -248,7 +262,7 @@ export default function PlansScreen() {
               style={styles.searchInput}
               value={searchTerm}
               onChangeText={setSearchTerm}
-              placeholder={`Search ${selectedCountry} plans…`}
+              placeholder={`Search ${selectedCountry} plans or type GB (e.g. 5)…`}
               placeholderTextColor={COLORS.textDim}
             />
           </View>
@@ -344,27 +358,18 @@ function PlanCard({
 
       <View style={styles.planDetails}>
         <View style={styles.planDetailRow}>
-          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(255,215,0,0.08)' }]}>
-            <Text style={styles.planDetailIconText}>D</Text>
-          </View>
           <View>
             <Text style={styles.planDetailValue}>{plan.dataGb}</Text>
             <Text style={styles.planDetailLabel}>High-Speed Downlink Cap</Text>
           </View>
         </View>
         <View style={styles.planDetailRow}>
-          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(148,236,180,0.08)' }]}>
-            <Text style={[styles.planDetailIconText, { color: '#94ecb4' }]}>V</Text>
-          </View>
           <View>
             <Text style={styles.planDetailValue}>{plan.validityDays} {plan.validityDays === 1 ? 'Day' : 'Days'}</Text>
             <Text style={styles.planDetailLabel}>Validity Limit</Text>
           </View>
         </View>
         <View style={styles.planDetailRow}>
-          <View style={[styles.planDetailIcon, { backgroundColor: 'rgba(255,215,0,0.08)' }]}>
-            <Text style={styles.planDetailIconText}>C</Text>
-          </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.planDetailValue} numberOfLines={2}>{plan.culturalInsightTitle}</Text>
             <Text style={[styles.planDetailLabel, { fontStyle: 'italic', marginTop: 2 }]} numberOfLines={3}>{plan.culturalInsightDesc}</Text>
@@ -536,8 +541,6 @@ const styles = StyleSheet.create({
   planSpeed: { color: COLORS.gold, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   planDetails: { gap: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12 },
   planDetailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  planDetailIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  planDetailIconText: { color: COLORS.gold, fontSize: 11, fontWeight: '900' },
   planDetailValue: { color: '#fff', fontSize: 13, fontWeight: '700' },
   planDetailLabel: { color: COLORS.textDim, fontSize: 9, marginTop: 1 },
   planBtnRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
