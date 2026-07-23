@@ -19,4 +19,4 @@ View your app in AI Studio: https://ai.studio/apps/53a073b3-aec8-45ca-a97c-1d022
 3. Run the app:
    `npm run dev`
       
-   Contributor: theinsideguy20
+   Contributor: thagreat89
