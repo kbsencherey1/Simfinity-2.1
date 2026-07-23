@@ -81,9 +81,6 @@ export default function SignUpScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>FULL NAME</Text>
                 <View style={glass.input}>
-                  <View style={styles.inputIconBox}>
-                    <Text style={styles.inputIconText}>N</Text>
-                  </View>
                   <TextInput
                     style={styles.inputText}
                     value={name}
@@ -138,9 +135,6 @@ export default function SignUpScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>REFERRAL CODE (OPTIONAL)</Text>
                 <View style={glass.input}>
-                  <View style={styles.inputIconBox}>
-                    <Text style={styles.inputIconText}>R</Text>
-                  </View>
                   <TextInput
                     style={styles.inputText}
                     value={referralCode}

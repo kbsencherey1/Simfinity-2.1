@@ -114,18 +114,12 @@ export default function ReferFriendScreen() {
               style={({ pressed }) => [glass.panel, styles.shareActionBtn, pressed && { opacity: 0.7 }]}
               onPress={handleShare}
             >
-              <View style={styles.shareActionIcon}>
-                <Text style={styles.shareActionIconText}>S</Text>
-              </View>
               <Text style={styles.shareActionText}>Share Link</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [glass.panel, styles.shareActionBtn, pressed && { opacity: 0.7 }]}
               onPress={handleShare}
             >
-              <View style={[styles.shareActionIcon, { backgroundColor: 'rgba(148,236,180,0.1)' }]}>
-                <Text style={[styles.shareActionIconText, { color: COLORS.greenLight }]}>E</Text>
-              </View>
               <Text style={styles.shareActionText}>Email Code</Text>
             </Pressable>
           </View>
@@ -171,9 +165,7 @@ export default function ReferFriendScreen() {
                     return (
                       <View key={idx} style={[styles.statusStep, isLast && { marginBottom: 0 }]}>
                         <View style={[styles.statusStepCircle, isActivated ? styles.statusStepDone : styles.statusStepPartial]}>
-                          {isActivated
-                            ? <Text style={styles.statusStepDoneIcon}>✓</Text>
-                            : <Text style={styles.statusStepPartialIcon}>P</Text>}
+                          {isActivated && <Text style={styles.statusStepDoneIcon}>✓</Text>}
                         </View>
                         <View style={styles.statusStepContent}>
                           <Text style={styles.statusStepTitle}>
@@ -202,9 +194,6 @@ export default function ReferFriendScreen() {
 
         {/* Wisdom Quote */}
         <View style={styles.wisdomBox}>
-          <View style={styles.wisdomIcon}>
-            <Text style={styles.wisdomIconText}>W</Text>
-          </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.wisdomLabel}>WISDOM OF THE ANCIENTS</Text>
             <Text style={styles.wisdomQuote}>
@@ -280,15 +269,6 @@ const styles = StyleSheet.create({
 
   shareBtnRow: { flexDirection: 'row', gap: 10 },
   shareActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  shareActionIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shareActionIconText: { color: COLORS.gold, fontSize: 10, fontWeight: '900' },
   shareActionText: { color: COLORS.textMuted, fontSize: 12, fontWeight: '700' },
 
   statusLabel: { color: COLORS.textDim, fontSize: 10, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
@@ -318,7 +298,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.5)',
   },
-  statusStepPartialIcon: { color: COLORS.gold, fontSize: 12, fontWeight: '900' },
   statusStepPending: {
     backgroundColor: '#0e0e0e',
     borderWidth: 1,
@@ -354,17 +333,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.1)',
   },
-  wisdomIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,215,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    marginTop: 2,
-  },
-  wisdomIconText: { color: COLORS.gold, fontSize: 11, fontWeight: '900' },
   wisdomLabel: { color: COLORS.gold, fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
   wisdomQuote: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18, fontStyle: 'italic' },
 });
