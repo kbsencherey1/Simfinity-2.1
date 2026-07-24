@@ -16,7 +16,6 @@ A full-stack eSIM purchasing app for Ghanaians and travellers. React Native (Exp
 
 ## Quick Start (same WiFi)
 
-<<<<<<< HEAD
 ### 1 — API keys
 
 Copy the example and fill in your keys:
@@ -122,12 +121,3 @@ Data persists in Docker volumes (`postgres_data`, `avatars_data`). To wipe every
 ```sh
 docker compose down -v
 ```
-=======
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-      
-   Contributor: thagreat89
->>>>>>> 0543e75c9b5bf534b27ebb542d61eb9204fa2a18
