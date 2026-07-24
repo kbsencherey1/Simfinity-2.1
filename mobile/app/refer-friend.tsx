@@ -23,6 +23,13 @@ interface ReferralEntry {
   joinedAt: string | null;
 }
 
+interface UnclaimedReward {
+  id: number;
+  discountPercent: number;
+  earnedAt: string | null;
+  referredName: string;
+}
+
 export default function ReferFriendScreen() {
   const { referralCode, token } = useApp();
   const [copied, setCopied] = useState(false);
@@ -31,20 +38,26 @@ export default function ReferFriendScreen() {
   const [totalActivated, setTotalActivated] = useState(0);
   const [gbEarned, setGbEarned] = useState(0);
   const [referrals, setReferrals] = useState<ReferralEntry[]>([]);
+  const [rewards, setRewards] = useState<UnclaimedReward[]>([]);
 
   useEffect(() => {
     if (!token) { setStatsLoading(false); return; }
-    fetch(`${API_BASE}/api/user/referrals`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) {
-          setTotalReferred(data.totalReferred ?? 0);
-          setTotalActivated(data.totalActivated ?? 0);
-          setGbEarned(data.gbEarned ?? 0);
-          setReferrals(data.referrals ?? []);
+    Promise.all([
+      fetch(`${API_BASE}/api/user/referrals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.ok ? r.json() : null),
+      fetch(`${API_BASE}/api/user/referral-rewards`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.ok ? r.json() : null),
+    ])
+      .then(([referralData, rewardsData]) => {
+        if (referralData) {
+          setTotalReferred(referralData.totalReferred ?? 0);
+          setTotalActivated(referralData.totalActivated ?? 0);
+          setGbEarned(referralData.gbEarned ?? 0);
+          setReferrals(referralData.referrals ?? []);
         }
+        if (Array.isArray(rewardsData)) setRewards(rewardsData);
       })
       .catch(() => {})
       .finally(() => setStatsLoading(false));
@@ -124,6 +137,24 @@ export default function ReferFriendScreen() {
             </Pressable>
           </View>
         </View>
+
+        {/* Unclaimed Rewards */}
+        {rewards.length > 0 && (
+          <View style={{ gap: 8 }}>
+            <Text style={styles.statusLabel}>UNCLAIMED REWARDS</Text>
+            <View style={[glass.panel, styles.rewardsCard]}>
+              {rewards.map((reward, idx) => (
+                <View key={reward.id} style={[styles.rewardRow, idx > 0 && styles.rewardRowDivider]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rewardAmount}>{reward.discountPercent.toFixed(0)}% off your next purchase</Text>
+                    <Text style={styles.rewardSub}>Earned from {reward.referredName}'s activation</Text>
+                  </View>
+                </View>
+              ))}
+              <Text style={styles.rewardsHint}>Apply it at checkout on your next plan purchase.</Text>
+            </View>
+          </View>
+        )}
 
         {/* Referral Stats */}
         <View style={{ gap: 8 }}>
@@ -335,4 +366,11 @@ const styles = StyleSheet.create({
   },
   wisdomLabel: { color: COLORS.gold, fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
   wisdomQuote: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18, fontStyle: 'italic' },
+
+  rewardsCard: { padding: 14, gap: 10 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rewardRowDivider: { borderTopWidth: 1, borderTopColor: 'rgba(77,71,50,0.25)', paddingTop: 10 },
+  rewardAmount: { color: COLORS.greenLight, fontSize: 14, fontWeight: '800' },
+  rewardSub: { color: COLORS.textDim, fontSize: 11, marginTop: 2 },
+  rewardsHint: { color: COLORS.textMuted, fontSize: 11, fontStyle: 'italic' },
 });

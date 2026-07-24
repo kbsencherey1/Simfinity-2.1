@@ -2,9 +2,11 @@ package com.simfinity.backend.controller;
 
 import com.simfinity.backend.entity.EsimPurchase;
 import com.simfinity.backend.entity.PaymentRecord;
+import com.simfinity.backend.entity.ReferralReward;
 import com.simfinity.backend.entity.User;
 import com.simfinity.backend.repository.EsimPurchaseRepository;
 import com.simfinity.backend.repository.PaymentRepository;
+import com.simfinity.backend.repository.ReferralRewardRepository;
 import com.simfinity.backend.repository.UserRepository;
 import com.simfinity.backend.service.EmailService;
 import com.simfinity.backend.service.ZenditService;
@@ -34,6 +36,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final EsimPurchaseRepository esimPurchaseRepository;
     private final PaymentRepository paymentRepository;
+    private final ReferralRewardRepository referralRewardRepository;
     private final ZenditService zenditService;
     private final EmailService emailService;
 
@@ -46,11 +49,13 @@ public class UserController {
     public UserController(UserRepository userRepository,
                           EsimPurchaseRepository esimPurchaseRepository,
                           PaymentRepository paymentRepository,
+                          ReferralRewardRepository referralRewardRepository,
                           ZenditService zenditService,
                           EmailService emailService) {
         this.userRepository = userRepository;
         this.esimPurchaseRepository = esimPurchaseRepository;
         this.paymentRepository = paymentRepository;
+        this.referralRewardRepository = referralRewardRepository;
         this.zenditService = zenditService;
         this.emailService = emailService;
     }
@@ -196,6 +201,29 @@ public class UserController {
         result.put("gbEarned", activated * 3.0);
         result.put("referrals", referralList);
         return ResponseEntity.ok(result);
+    }
+
+    /** Unclaimed discounts — applied at checkout (see PaystackController), not redeemed here. */
+    @GetMapping("/referral-rewards")
+    public ResponseEntity<?> getReferralRewards(Authentication auth) {
+        Optional<User> userOpt = userRepository.findByEmail(auth.getName());
+        if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        List<Map<String, Object>> rewards = referralRewardRepository
+            .findByUserAndStatusOrderByEarnedAtDesc(userOpt.get(), "UNCLAIMED")
+            .stream().map(r -> {
+                User referred = r.getReferredUser();
+                String firstName = referred != null && referred.getFullName() != null && !referred.getFullName().isBlank()
+                    ? referred.getFullName().split("\\s+")[0] : "A friend";
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", r.getId());
+                m.put("discountPercent", r.getDiscountPercent());
+                m.put("earnedAt", r.getEarnedAt() != null ? r.getEarnedAt().toString() : null);
+                m.put("referredName", firstName);
+                return m;
+            }).toList();
+
+        return ResponseEntity.ok(rewards);
     }
 
     @GetMapping("/esims")

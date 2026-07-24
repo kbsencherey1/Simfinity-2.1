@@ -80,17 +80,12 @@ export default function LoginScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>EMAIL ADDRESS</Text>
                 <View style={glass.input}>
-                  <View style={styles.inputIconBox}>
-                    <Text style={styles.inputIconText}>@</Text>
-                  </View>
                   <TextInput
                     style={styles.inputText}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    placeholderTextColor={COLORS.textDim}
-                    placeholder="name@example.com"
                   />
                 </View>
               </View>
@@ -98,16 +93,11 @@ export default function LoginScreen() {
               <View style={styles.field}>
                 <Text style={styles.label}>PASSWORD</Text>
                 <View style={glass.input}>
-                  <View style={styles.inputIconBox}>
-                    <Text style={styles.inputIconText}>••</Text>
-                  </View>
                   <TextInput
                     style={[styles.inputText, { flex: 1 }]}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
-                    placeholderTextColor={COLORS.textDim}
-                    placeholder="••••••••"
                   />
                   <Pressable
                     onPress={() => setShowPassword(!showPassword)}
@@ -159,14 +149,6 @@ const styles = StyleSheet.create({
   heading: { color: '#fff', fontSize: 22, fontWeight: '800' },
   field: { gap: 6 },
   label: { color: COLORS.textDim, fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  inputIconBox: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 6,
-  },
-  inputIconText: { color: COLORS.textDim, fontSize: 12, fontWeight: '700' },
   inputText: { color: '#fff', fontSize: 14, flex: 1 },
   showHideBtn: { paddingHorizontal: 8, paddingVertical: 4 },
   showHideText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
