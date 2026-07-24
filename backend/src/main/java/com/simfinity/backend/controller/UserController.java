@@ -198,7 +198,7 @@ public class UserController {
         result.put("code", current.getReferralCode() != null ? current.getReferralCode() : "");
         result.put("totalReferred", referred.size());
         result.put("totalActivated", activated);
-        result.put("gbEarned", activated * 3.0);
+        result.put("rewardsEarned", referralRewardRepository.countByUser(current));
         result.put("referrals", referralList);
         return ResponseEntity.ok(result);
     }

@@ -556,7 +556,7 @@ export default function MyEsimsScreen() {
               </View>
               <Text style={styles.referTitle}>Refer a Friend</Text>
               <Text style={styles.referSub}>
-                Earn 3GB free data for every friend who joins Simfinity. Get gift codes instantly.
+                Earn a discount for every friend who joins Simfinity and activates their first eSIM.
               </Text>
             </View>
           </ImageBackground>

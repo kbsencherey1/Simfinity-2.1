@@ -7,6 +7,7 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AvatarImage } from '../../components/AvatarImage';
@@ -16,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
 import { useApp, CURRENCIES } from '../../context/AppContext';
 import { API_BASE } from '../../config';
+import { TOURIST_SPOTS } from '../../data';
 
 function formatPaymentDate(iso: string | null): string {
   if (!iso) return '—';
@@ -70,6 +72,7 @@ export default function AccountScreen() {
   } = useApp();
   const [uploading, setUploading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [creditsVisible, setCreditsVisible] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [pastPlansOpen, setPastPlansOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false);
@@ -354,7 +357,31 @@ export default function AccountScreen() {
         >
           <Text style={styles.logoutText}>Log Out</Text>
         </Pressable>
+
+        <Pressable onPress={() => setCreditsVisible(true)} style={({ pressed }) => pressed && { opacity: 0.6 }}>
+          <Text style={styles.creditsLink}>Photo Credits</Text>
+        </Pressable>
       </ScrollView>
+
+      <Modal visible={creditsVisible} transparent animationType="fade" onRequestClose={() => setCreditsVisible(false)}>
+        <Pressable style={styles.creditsBackdrop} onPress={() => setCreditsVisible(false)}>
+          <Pressable style={styles.creditsSheet} onPress={e => e.stopPropagation()}>
+            <Text style={styles.creditsTitle}>Photo Credits</Text>
+            {TOURIST_SPOTS.filter(s => s.attribution).map(s => (
+              <View key={s.id} style={styles.creditsRow}>
+                <Text style={styles.creditsSpot}>{s.name}</Text>
+                <Text style={styles.creditsAttribution}>{s.attribution}</Text>
+              </View>
+            ))}
+            <Pressable
+              style={({ pressed }) => [styles.creditsCloseBtn, pressed && { opacity: 0.8 }]}
+              onPress={() => setCreditsVisible(false)}
+            >
+              <Text style={styles.creditsCloseBtnText}>Close</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -454,6 +481,29 @@ const styles = StyleSheet.create({
   },
   logoutBtnPressed: { backgroundColor: 'rgba(204,78,60,0.22)', transform: [{ scale: 0.98 }] },
   logoutText: { color: '#cc4e3c', fontWeight: '700', fontSize: 15 },
+
+  creditsLink: { color: COLORS.textDim, fontSize: 10, textAlign: 'center', marginTop: 4 },
+  creditsBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 24 },
+  creditsSheet: {
+    backgroundColor: '#131313',
+    borderRadius: 16,
+    padding: 20,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  creditsTitle: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  creditsRow: { gap: 2 },
+  creditsSpot: { color: COLORS.gold, fontSize: 12, fontWeight: '700' },
+  creditsAttribution: { color: COLORS.textMuted, fontSize: 11 },
+  creditsCloseBtn: {
+    marginTop: 4,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
+  },
+  creditsCloseBtnText: { color: '#000', fontWeight: '800', fontSize: 13 },
 
   dropdownCard: { padding: 0, overflow: 'hidden' },
   dropdownHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 10 },

@@ -11,4 +11,5 @@ public interface ReferralRewardRepository extends JpaRepository<ReferralReward, 
     List<ReferralReward> findByUserAndStatusOrderByEarnedAtDesc(User user, String status);
     Optional<ReferralReward> findByIdAndUser(Long id, User user);
     boolean existsByReferredUser(User referredUser);
+    long countByUser(User user);
 }

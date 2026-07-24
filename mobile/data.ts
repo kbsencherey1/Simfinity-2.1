@@ -106,6 +106,8 @@ export interface TouristSpot {
   location: string;
   description: string;
   imageUrl: string;
+  /** Required by the source photo's license (CC BY / CC BY-SA) — shown on the Photo Credits screen. */
+  attribution?: string;
 }
 
 export const TOURIST_SPOTS: TouristSpot[] = [
@@ -121,14 +123,16 @@ export const TOURIST_SPOTS: TouristSpot[] = [
     name: 'Cape Coast Castle Coastline',
     location: 'Central Region, Ghana',
     description: 'A world heritage site of immense historical significance, looking over pristine Atlantic waves crashing on the coast.',
-    imageUrl: 'https://images.unsplash.com/photo-1591389703635-e15a07b842d7?auto=format&fit=crop&w=900&q=75',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/A_daytime_view_of_Cape_Coast_Castle.jpg/960px-A_daytime_view_of_Cape_Coast_Castle.jpg',
+    attribution: 'Photo: Bright Kwame Ayisi (Wikimedia Commons, CC BY 4.0)',
   },
   {
     id: 'mole',
     name: 'Mole National Park',
     location: 'Savannah Region, Ghana',
     description: "Ghana's premier savanna wildlife refuge, sheltering majestic African elephants, rare antelopes, and local primates.",
-    imageUrl: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=900&q=75',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/An_elephant_walking_at_Mole_National_Park.jpg/960px-An_elephant_walking_at_Mole_National_Park.jpg',
+    attribution: 'Photo: Danieljatuat (Wikimedia Commons, CC BY-SA 4.0)',
   },
   {
     id: 'wli',
@@ -142,7 +146,7 @@ export const TOURIST_SPOTS: TouristSpot[] = [
     name: 'Elmina Fishing Harbor & Castle',
     location: 'Central Region, Ghana',
     description: 'A vibrant harbor loaded with beautifully carved canoes, adjacent to one of the earliest transatlantic stone structures.',
-    imageUrl: 'https://images.unsplash.com/photo-1590001155093-a3c66ab0c3ff?auto=format&fit=crop&w=900&q=75',
+    imageUrl: 'https://images.unsplash.com/photo-1769297468250-dfdea4662b00?auto=format&fit=crop&w=900&q=75',
   },
 ];
 

@@ -36,7 +36,7 @@ export default function ReferFriendScreen() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [totalReferred, setTotalReferred] = useState(0);
   const [totalActivated, setTotalActivated] = useState(0);
-  const [gbEarned, setGbEarned] = useState(0);
+  const [rewardsEarned, setRewardsEarned] = useState(0);
   const [referrals, setReferrals] = useState<ReferralEntry[]>([]);
   const [rewards, setRewards] = useState<UnclaimedReward[]>([]);
 
@@ -54,7 +54,7 @@ export default function ReferFriendScreen() {
         if (referralData) {
           setTotalReferred(referralData.totalReferred ?? 0);
           setTotalActivated(referralData.totalActivated ?? 0);
-          setGbEarned(referralData.gbEarned ?? 0);
+          setRewardsEarned(referralData.rewardsEarned ?? 0);
           setReferrals(referralData.referrals ?? []);
         }
         if (Array.isArray(rewardsData)) setRewards(rewardsData);
@@ -104,7 +104,7 @@ export default function ReferFriendScreen() {
           </View>
           <Text style={styles.heroTitle}>Share the Gift of Global Soul</Text>
           <Text style={styles.heroSub}>
-            Give a friend 1GB data to start their exploration journey, and earn 3GB for yourself of global high-speed value.
+            Invite a friend to Simfinity, and earn a discount on your next purchase when they activate their first eSIM plan.
           </Text>
         </View>
 
@@ -177,8 +177,8 @@ export default function ReferFriendScreen() {
                   <Text style={styles.statChipLabel}>Activated</Text>
                 </View>
                 <View style={[glass.panel, styles.statChip]}>
-                  <Text style={[styles.statChipNum, { color: COLORS.greenLight }]}>{gbEarned.toFixed(0)} GB</Text>
-                  <Text style={styles.statChipLabel}>Earned</Text>
+                  <Text style={[styles.statChipNum, { color: COLORS.greenLight }]}>{rewardsEarned}</Text>
+                  <Text style={styles.statChipLabel}>Rewards</Text>
                 </View>
               </View>
 
@@ -204,7 +204,7 @@ export default function ReferFriendScreen() {
                           </Text>
                           <Text style={styles.statusStepDesc}>
                             {r.joinedAt ? `Joined ${r.joinedAt}` : 'Recently joined'}
-                            {isActivated ? ' · 3GB reward earned' : ' · Waiting for first activation'}
+                            {isActivated ? ' · Discount reward earned' : ' · Waiting for first activation'}
                           </Text>
                         </View>
                       </View>
@@ -216,7 +216,7 @@ export default function ReferFriendScreen() {
               {/* Earn note */}
               <View style={styles.earnNote}>
                 <Text style={styles.earnNoteText}>
-                  Earn 3GB free data when each referred friend activates their first eSIM plan.
+                  Earn 10% off your next purchase when each referred friend activates their first eSIM plan.
                 </Text>
               </View>
             </>
