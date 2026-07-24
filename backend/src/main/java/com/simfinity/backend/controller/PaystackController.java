@@ -2,8 +2,11 @@ package com.simfinity.backend.controller;
 
 import com.simfinity.backend.entity.EsimPurchase;
 import com.simfinity.backend.entity.PaymentRecord;
+import com.simfinity.backend.entity.ReferralReward;
+import com.simfinity.backend.entity.User;
 import com.simfinity.backend.repository.EsimPurchaseRepository;
 import com.simfinity.backend.repository.PaymentRepository;
+import com.simfinity.backend.repository.ReferralRewardRepository;
 import com.simfinity.backend.repository.UserRepository;
 import com.simfinity.backend.service.PaystackService;
 import com.simfinity.backend.service.ZenditService;
@@ -13,7 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/paystack")
@@ -26,17 +31,20 @@ public class PaystackController {
     private final UserRepository userRepository;
     private final EsimPurchaseRepository esimPurchaseRepository;
     private final PaymentRepository paymentRepository;
+    private final ReferralRewardRepository referralRewardRepository;
 
     public PaystackController(PaystackService paystackService,
                                ZenditService zenditService,
                                UserRepository userRepository,
                                EsimPurchaseRepository esimPurchaseRepository,
-                               PaymentRepository paymentRepository) {
+                               PaymentRepository paymentRepository,
+                               ReferralRewardRepository referralRewardRepository) {
         this.paystackService = paystackService;
         this.zenditService = zenditService;
         this.userRepository = userRepository;
         this.esimPurchaseRepository = esimPurchaseRepository;
         this.paymentRepository = paymentRepository;
+        this.referralRewardRepository = referralRewardRepository;
     }
 
     @PostMapping("/initialize")
@@ -51,6 +59,21 @@ public class PaystackController {
         }
         double amountGhs = amountObj instanceof Number n ? n.doubleValue()
             : Double.parseDouble(amountObj.toString());
+
+        // A referral discount can only be applied by its owner — requires auth, not just an email match.
+        Object rewardIdObj = body.get("rewardId");
+        if (rewardIdObj != null && auth != null) {
+            Long rewardId = rewardIdObj instanceof Number n ? n.longValue() : Long.parseLong(rewardIdObj.toString());
+            Optional<User> userOpt = userRepository.findByEmail(auth.getName());
+            if (userOpt.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "User not found."));
+
+            Optional<ReferralReward> rewardOpt = referralRewardRepository.findByIdAndUser(rewardId, userOpt.get());
+            if (rewardOpt.isEmpty() || !"UNCLAIMED".equals(rewardOpt.get().getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "This reward is not available."));
+            }
+            double discountPercent = rewardOpt.get().getDiscountPercent();
+            amountGhs = Math.round(amountGhs * (1 - discountPercent / 100.0) * 100.0) / 100.0;
+        }
 
         return ResponseEntity.ok(paystackService.initializeTransaction(email, amountGhs, planId));
     }
@@ -106,6 +129,9 @@ public class PaystackController {
 
                     @SuppressWarnings("unchecked")
                     Map<String, Object> esimData = (Map<String, Object>) finalResult.get("esim");
+                    boolean isTopUpPurchase = esimData != null && Boolean.TRUE.equals(esimData.get("isTopUp"));
+                    boolean wasFirstActivation = !esimPurchaseRepository.existsByUser(user);
+
                     EsimPurchase purchase = new EsimPurchase();
                     purchase.setUser(user);
                     purchase.setPlanId(planId);
@@ -119,13 +145,40 @@ public class PaystackController {
                         String iccid = (String) esimData.get("iccid");
                         purchase.setIccid(iccid);
                         // For top-ups, ICCID is the target; activation fields come from the existing eSIM
-                        if (!Boolean.TRUE.equals(esimData.get("isTopUp"))) {
+                        if (!isTopUpPurchase) {
                             purchase.setActivationCode((String) esimData.get("activationCode"));
                             purchase.setSmdpAddress((String) esimData.get("smdpAddress"));
                             purchase.setQrCodeUrl((String) esimData.get("qrCodeUrl"));
                         }
                     }
                     esimPurchaseRepository.save(purchase);
+
+                    // Referral reward: first-ever activation (not a top-up) by someone who
+                    // signed up with a referral code grants the referrer a redeemable discount.
+                    if (!isTopUpPurchase && wasFirstActivation && user.getReferredById() != null
+                            && !referralRewardRepository.existsByReferredUser(user)) {
+                        userRepository.findById(user.getReferredById()).ifPresent(referrer -> {
+                            ReferralReward reward = new ReferralReward();
+                            reward.setUser(referrer);
+                            reward.setReferredUser(user);
+                            referralRewardRepository.save(reward);
+                        });
+                    }
+
+                    // If this purchase applied a referral discount, mark it consumed now that
+                    // payment has actually succeeded (not at /initialize, in case it's abandoned).
+                    Object rewardIdObj = body != null ? body.get("rewardId") : null;
+                    if (rewardIdObj != null) {
+                        Long rewardId = rewardIdObj instanceof Number n ? n.longValue() : Long.parseLong(rewardIdObj.toString());
+                        referralRewardRepository.findByIdAndUser(rewardId, user).ifPresent(reward -> {
+                            if ("UNCLAIMED".equals(reward.getStatus())) {
+                                reward.setStatus("REDEEMED");
+                                reward.setRedeemedAt(LocalDateTime.now());
+                                reward.setRedeemedReference(reference);
+                                referralRewardRepository.save(reward);
+                            }
+                        });
+                    }
                 } catch (Exception e) {
                     log.warn("[Paystack] Failed to save purchase records: {}", e.getMessage());
                 }
