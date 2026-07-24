@@ -243,11 +243,6 @@ export default function PlansScreen() {
               ]}
               onPress={() => setSelectedCountry(c.code)}
             >
-              <View style={[styles.countryCodeBadge, selectedCountry === c.code && styles.countryCodeBadgeActive]}>
-                <Text style={[styles.countryCodeText, selectedCountry === c.code && styles.countryCodeTextActive]}>
-                  {c.code}
-                </Text>
-              </View>
               <Text style={[styles.countryName, selectedCountry === c.code && styles.countryNameActive]}>
                 {c.name}
               </Text>
@@ -492,17 +487,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   countryChipActive: { backgroundColor: 'rgba(255,215,0,0.12)', borderColor: COLORS.gold },
-  countryCodeBadge: {
-    width: 26,
-    height: 18,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countryCodeBadgeActive: { backgroundColor: 'rgba(255,215,0,0.2)' },
-  countryCodeText: { color: COLORS.textDim, fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
-  countryCodeTextActive: { color: COLORS.gold },
   countryName: { color: COLORS.textMuted, fontSize: 12, fontWeight: '600' },
   countryNameActive: { color: COLORS.gold },
 

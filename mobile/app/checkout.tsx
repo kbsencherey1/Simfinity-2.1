@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,13 @@ import { INITIAL_PLANS } from '../data';
 
 import { API_BASE } from '../config';
 
+interface UnclaimedReward {
+  id: number;
+  discountPercent: number;
+  earnedAt: string | null;
+  referredName: string;
+}
+
 export default function CheckoutScreen() {
   const { checkoutPlan, user, token, addSubscription, setProvisionedEsim, topUpEsim, setTopUpEsim, fetchEsims } = useApp();
   const plan = checkoutPlan ?? INITIAL_PLANS[2];
@@ -26,6 +33,23 @@ export default function CheckoutScreen() {
   const [reference, setReference] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const [rewards, setRewards] = useState<UnclaimedReward[]>([]);
+  const [appliedRewardId, setAppliedRewardId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE}/api/user/referral-rewards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (Array.isArray(data)) setRewards(data); })
+      .catch(() => {});
+  }, [token]);
+
+  const appliedReward = rewards.find(r => r.id === appliedRewardId) ?? null;
+  const discountedPrice = appliedReward
+    ? Math.round(plan.priceGhs * (1 - appliedReward.discountPercent / 100) * 100) / 100
+    : plan.priceGhs;
 
   const doVerify = async (ref: string) => {
     setIsVerifying(true);
@@ -36,10 +60,13 @@ export default function CheckoutScreen() {
         planName: plan.name,
         dataGb: plan.dataGb,
         validityDays: plan.validityDays,
-        amountGhs: plan.priceGhs,
+        amountGhs: discountedPrice,
       };
       if (topUpEsim?.iccid) {
         body.targetIccid = topUpEsim.iccid;
+      }
+      if (appliedRewardId != null) {
+        body.rewardId = appliedRewardId;
       }
       const res = await fetch(`${API_BASE}/api/paystack/verify/${ref}`, {
         method: 'POST',
@@ -88,6 +115,7 @@ export default function CheckoutScreen() {
           email: user.email,
           amountGhs: plan.priceGhs,
           planId: plan.id,
+          ...(appliedRewardId != null ? { rewardId: appliedRewardId } : {}),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -139,7 +167,10 @@ export default function CheckoutScreen() {
               <Text style={styles.planName}>{plan.name}</Text>
             </View>
             <View style={styles.planPriceBox}>
-              <Text style={styles.planPrice} numberOfLines={1} adjustsFontSizeToFit>GHS {plan.priceGhs}</Text>
+              {appliedReward && (
+                <Text style={styles.planPriceStrike} numberOfLines={1}>GHS {plan.priceGhs}</Text>
+              )}
+              <Text style={styles.planPrice} numberOfLines={1} adjustsFontSizeToFit>GHS {discountedPrice}</Text>
               <Text style={styles.planPriceAlt}>~ ${plan.priceUsd} USD</Text>
             </View>
           </View>
@@ -159,6 +190,30 @@ export default function CheckoutScreen() {
             </View>
           </View>
         </View>
+
+        {/* Referral discount */}
+        {rewards.length > 0 && (
+          <View style={[glass.panel, styles.rewardCard]}>
+            <Text style={styles.rewardCardLabel}>REFERRAL DISCOUNT AVAILABLE</Text>
+            {rewards.map(reward => {
+              const selected = appliedRewardId === reward.id;
+              return (
+                <Pressable
+                  key={reward.id}
+                  style={({ pressed }) => [styles.rewardOption, selected && styles.rewardOptionSelected, pressed && { opacity: 0.8 }]}
+                  onPress={() => setAppliedRewardId(selected ? null : reward.id)}
+                >
+                  <View style={[styles.rewardCheckbox, selected && styles.rewardCheckboxChecked]}>
+                    {selected && <Text style={styles.rewardCheckmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.rewardOptionText}>
+                    {reward.discountPercent.toFixed(0)}% off — earned from {reward.referredName}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         {/* Specs bento */}
         <View style={styles.bentoRow}>
@@ -185,7 +240,7 @@ export default function CheckoutScreen() {
             </View>
             <Text style={styles.paymentSub}>
               A secure Paystack sandbox payment page opened for{' '}
-              <Text style={{ color: '#fff', fontWeight: '700' }}>GHS {plan.priceGhs}</Text>.
+              <Text style={{ color: '#fff', fontWeight: '700' }}>GHS {discountedPrice}</Text>.
               Complete it, then tap Verify.
             </Text>
             <View style={styles.paymentBtns}>
@@ -228,7 +283,7 @@ export default function CheckoutScreen() {
             {isInitializing ? (
               <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.payBtnText}>{topUpEsim ? `Top Up GHS ${plan.priceGhs}` : `Secure Pay GHS ${plan.priceGhs}`}</Text>
+              <Text style={styles.payBtnText}>{topUpEsim ? `Top Up GHS ${discountedPrice}` : `Secure Pay GHS ${discountedPrice}`}</Text>
             )}
           </Pressable>
         ) : (
@@ -286,6 +341,7 @@ const styles = StyleSheet.create({
   planPriceBox: { alignItems: 'flex-end', flexShrink: 0, maxWidth: '42%' },
   planPrice: { color: COLORS.gold, fontSize: 20, fontWeight: '800' },
   planPriceAlt: { color: COLORS.textDim, fontSize: 10 },
+  planPriceStrike: { color: COLORS.textDim, fontSize: 12, textDecorationLine: 'line-through' },
   planStatsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -305,6 +361,23 @@ const styles = StyleSheet.create({
   culturalLabel: { color: COLORS.gold, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   culturalTitle: { color: '#fff', fontSize: 13, fontWeight: '700', marginTop: 2 },
   culturalDesc: { color: COLORS.textMuted, fontSize: 11, lineHeight: 17 },
+
+  rewardCard: { padding: 16, gap: 10, borderWidth: 1, borderColor: 'rgba(148,236,180,0.25)' },
+  rewardCardLabel: { color: COLORS.greenLight, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  rewardOption: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8 },
+  rewardOptionSelected: { backgroundColor: 'rgba(148,236,180,0.08)' },
+  rewardCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(148,236,180,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rewardCheckboxChecked: { backgroundColor: COLORS.greenLight, borderColor: COLORS.greenLight },
+  rewardCheckmark: { color: '#000', fontSize: 12, fontWeight: '900' },
+  rewardOptionText: { color: '#fff', fontSize: 12, fontWeight: '600', flex: 1 },
 
   paymentBox: { padding: 16, gap: 10, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
   paymentPingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
