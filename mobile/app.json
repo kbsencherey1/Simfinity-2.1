@@ -15,8 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#131313",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png"
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "package": "com.simfinity.app",
       "predictiveBackGestureEnabled": false,
