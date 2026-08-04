@@ -271,7 +271,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,215,0,0.08)', alignItems: 'center', justifyContent: 'center', marginRight: 8,
   },
   inputIconText: { color: COLORS.textDim, fontSize: 11, fontWeight: '700' },
-  inputText: { color: '#fff', fontSize: 14, flex: 1 },
+  inputText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+    paddingVertical: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
 
   dobRow: { flexDirection: 'row', gap: 8 },
   dobPill: {

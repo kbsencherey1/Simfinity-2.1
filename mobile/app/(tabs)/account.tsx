@@ -18,6 +18,7 @@ import { COLORS, glass } from '../../components/styles';
 import { useApp, CURRENCIES } from '../../context/AppContext';
 import { API_BASE } from '../../config';
 import { TOURIST_SPOTS } from '../../data';
+import { LANGUAGES } from '../../i18n/translations';
 
 function formatPaymentDate(iso: string | null): string {
   if (!iso) return '—';
@@ -58,7 +59,7 @@ function DropdownSection({
           <Text style={styles.dropdownTitle}>{title}</Text>
           {subtitle && <Text style={styles.dropdownSub}>{subtitle}</Text>}
         </View>
-        <Text style={styles.dropdownChevron}>{isOpen ? '▲' : '▼'}</Text>
+        <Text style={styles.dropdownChevron}>{isOpen ? '⌃' : '⌄'}</Text>
       </Pressable>
       {isOpen && <View style={styles.dropdownBody}>{children}</View>}
     </View>
@@ -68,12 +69,13 @@ function DropdownSection({
 export default function AccountScreen() {
   const {
     user, isLoggedIn, logout, token, userId, avatarUrl, setAvatarUrl, currency, setCurrency,
-    pastEsims, payments, fetchEsims, fetchPayments,
+    pastEsims, payments, fetchEsims, fetchPayments, language, setLanguage, t,
   } = useApp();
   const [uploading, setUploading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [creditsVisible, setCreditsVisible] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [pastPlansOpen, setPastPlansOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
@@ -146,10 +148,10 @@ export default function AccountScreen() {
             style={({ pressed }) => [styles.signInBtn, pressed && styles.signInBtnPressed]}
             onPress={() => router.push('/login')}
           >
-            <Text style={styles.signInBtnText}>Sign In</Text>
+            <Text style={styles.signInBtnText}>{t('common.signIn')}</Text>
           </Pressable>
           <Pressable onPress={() => router.push('/signup')} style={({ pressed }) => pressed && { opacity: 0.6 }}>
-            <Text style={styles.createLink}>Create Account</Text>
+            <Text style={styles.createLink}>{t('common.createAccount')}</Text>
           </Pressable>
         </SafeAreaView>
       </View>
@@ -159,7 +161,7 @@ export default function AccountScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.header}>
-        <Text style={styles.headerTitle}>Account</Text>
+        <Text style={styles.headerTitle}>{t('account.title')}</Text>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -193,26 +195,42 @@ export default function AccountScreen() {
             onPress={() => router.push('/personal-info')}
           >
             <View style={styles.menuItemText}>
-              <Text style={styles.menuLabel}>Personal Information</Text>
-              <Text style={styles.menuSub}>Edit custom details and cellular configs</Text>
+              <Text style={styles.menuLabel}>{t('account.personalInfo')}</Text>
+              <Text style={styles.menuSub}>{t('account.personalInfoSub')}</Text>
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </Pressable>
 
           <View style={styles.menuDivider} />
 
-          <View style={styles.menuItem}>
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+            onPress={() => router.push('/travel-docs')}
+          >
             <View style={styles.menuItemText}>
-              <Text style={styles.menuLabel}>Privacy & Security</Text>
-              <Text style={styles.menuSub}>ENCRYPTED CODES: SHA-256 enabled</Text>
+              <Text style={styles.menuLabel}>{t('account.travelDocs')}</Text>
+              <Text style={styles.menuSub}>{t('account.travelDocsSub')}</Text>
             </View>
-            <Text style={styles.menuArrowGreen}>✓</Text>
-          </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </Pressable>
+
+          <View style={styles.menuDivider} />
+
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+            onPress={() => router.push('/privacy-policy')}
+          >
+            <View style={styles.menuItemText}>
+              <Text style={styles.menuLabel}>{t('account.privacyPolicy')}</Text>
+              <Text style={styles.menuSub}>{t('account.privacyPolicySub')}</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </Pressable>
         </View>
 
         {/* Currency Preference */}
         <DropdownSection
-          title="Currency Preference"
+          title={t('account.currency')}
           subtitle={`Currently ${currency} — tap to change`}
           isOpen={currencyOpen}
           onToggle={() => setCurrencyOpen(o => !o)}
@@ -239,9 +257,35 @@ export default function AccountScreen() {
           </View>
         </DropdownSection>
 
+        {/* Language Preference */}
+        <DropdownSection
+          title={t('account.language')}
+          subtitle={`Currently ${LANGUAGES.find(l => l.code === language)?.label ?? 'English'} — tap to change`}
+          isOpen={languageOpen}
+          onToggle={() => setLanguageOpen(o => !o)}
+        >
+          <View style={styles.currencyGrid}>
+            {LANGUAGES.map(l => (
+              <Pressable
+                key={l.code}
+                style={({ pressed }) => [
+                  styles.currencyChip,
+                  language === l.code && styles.currencyChipActive,
+                  pressed && { opacity: 0.75 },
+                ]}
+                onPress={() => setLanguage(l.code)}
+              >
+                <Text style={[styles.currencyChipCode, language === l.code && styles.currencyChipCodeActive]}>
+                  {l.nativeLabel}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </DropdownSection>
+
         {/* Previous Plans */}
         <DropdownSection
-          title="Previous Plans"
+          title={t('account.previousPlans')}
           subtitle={`${pastEsims.length} completed plan${pastEsims.length === 1 ? '' : 's'}`}
           isOpen={pastPlansOpen}
           onToggle={() => setPastPlansOpen(o => !o)}
@@ -294,7 +338,7 @@ export default function AccountScreen() {
 
         {/* Payment History */}
         <DropdownSection
-          title="Payment History"
+          title={t('account.paymentHistory')}
           subtitle={`${payments.length} payment${payments.length === 1 ? '' : 's'} on record`}
           isOpen={paymentsOpen}
           onToggle={() => setPaymentsOpen(o => !o)}
@@ -355,7 +399,7 @@ export default function AccountScreen() {
           style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
           onPress={handleLogout}
         >
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t('account.logOut')}</Text>
         </Pressable>
 
         <Pressable onPress={() => setCreditsVisible(true)} style={({ pressed }) => pressed && { opacity: 0.6 }}>
@@ -466,7 +510,6 @@ const styles = StyleSheet.create({
   menuLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
   menuSub: { color: COLORS.textDim, fontSize: 10, marginTop: 2 },
   menuArrow: { color: COLORS.textDim, fontSize: 22, fontWeight: '700' },
-  menuArrowGreen: { color: COLORS.greenLight, fontSize: 16, fontWeight: '700' },
 
   logoutBtn: {
     flexDirection: 'row',
@@ -509,7 +552,7 @@ const styles = StyleSheet.create({
   dropdownHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 10 },
   dropdownTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
   dropdownSub: { color: COLORS.textDim, fontSize: 11, marginTop: 2 },
-  dropdownChevron: { color: COLORS.gold, fontSize: 11 },
+  dropdownChevron: { color: COLORS.gold, fontSize: 16, fontWeight: '700' },
   dropdownBody: { padding: 16, paddingTop: 0, gap: 8 },
 
   pastSkeleton: { padding: 14, gap: 6 },

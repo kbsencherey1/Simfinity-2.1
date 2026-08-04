@@ -22,4 +22,9 @@ public class InsightController {
         Map<String, Object> result = insightService.getLocalInsight(country);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/akan-proverb")
+    public ResponseEntity<Map<String, Object>> getAkanProverb() {
+        return ResponseEntity.ok(insightService.getAkanProverb());
+    }
 }

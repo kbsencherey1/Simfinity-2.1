@@ -13,8 +13,8 @@ import org.springframework.web.client.RestTemplate;
 
 import jakarta.annotation.PostConstruct;
 
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ZenditService {
@@ -26,14 +26,13 @@ public class ZenditService {
 
     private final RestTemplate restTemplate;
     private final ExchangeRateService exchangeRateService;
+    private final RedisCacheHelper redisCache;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Random random = new Random();
 
-    private static final long CACHE_TTL_MS = 15 * 60 * 1000L;
+    private static final Duration CACHE_TTL = Duration.ofMinutes(15);
 
     private static final List<String> PREWARM_COUNTRIES = List.of("GH", "US", "GB", "NG", "ZA");
-    private record CachedOffers(Map<String, Object> data, long cachedAt) {}
-    private final ConcurrentHashMap<String, CachedOffers> offersCache = new ConcurrentHashMap<>();
 
     private static final Map<String, String> PLAN_ZENDIT_OFFER_MAP = Map.of(
         "oseikrom_daily", "ESIM-GH-1D-ULE-NOROAM",
@@ -68,9 +67,10 @@ public class ZenditService {
         return m;
     }
 
-    public ZenditService(RestTemplate restTemplate, ExchangeRateService exchangeRateService) {
+    public ZenditService(RestTemplate restTemplate, ExchangeRateService exchangeRateService, RedisCacheHelper redisCache) {
         this.restTemplate = restTemplate;
         this.exchangeRateService = exchangeRateService;
+        this.redisCache = redisCache;
     }
 
     @PostConstruct
@@ -293,12 +293,36 @@ public class ZenditService {
         }
     }
 
+    /**
+     * Looks up a plan's current GHS price across all cached offer catalogs (any country) — used
+     * to validate that a client isn't submitting a tampered/lowballed amountGhs to Paystack for a
+     * plan that actually costs more. Returns null if the plan isn't currently cached anywhere, in
+     * which case the caller should skip validation rather than block a legitimate purchase.
+     */
+    @SuppressWarnings("unchecked")
+    public Double findCatalogPriceGhs(String planId) {
+        for (String cacheKey : redisCache.keys("zendit:offers:*")) {
+            Map<String, Object> cached = redisCache.get(cacheKey);
+            if (cached == null) continue;
+            Object plansObj = cached.get("plans");
+            if (!(plansObj instanceof List)) continue;
+            for (Object o : (List<Object>) plansObj) {
+                if (!(o instanceof Map)) continue;
+                Map<String, Object> plan = (Map<String, Object>) o;
+                if (planId.equals(plan.get("id")) && plan.get("priceGhs") instanceof Number n) {
+                    return n.doubleValue();
+                }
+            }
+        }
+        return null;
+    }
+
     public Map<String, Object> getOffers(String country) {
         String key = country.toUpperCase();
-        CachedOffers cached = offersCache.get(key);
-        if (cached != null && (System.currentTimeMillis() - cached.cachedAt()) < CACHE_TTL_MS) {
+        Map<String, Object> cached = redisCache.get("zendit:offers:" + key);
+        if (cached != null) {
             log.info("[Zendit] Cache hit for country={}", key);
-            return cached.data();
+            return cached;
         }
 
         try {
@@ -327,8 +351,27 @@ public class ZenditService {
                         : (dataGbVal == 0 ? "Unlimited (Throttled)" : dataGbVal + " GB");
 
                     int days = o.path("durationDays").asInt(30);
+
+                    // Real carrier(s) this offer roams on, straight from Zendit — e.g. "MTN Ghana", "Vodafone Ghana".
+                    List<String> networkBrands = new ArrayList<>();
+                    JsonNode roamingNode = o.path("roaming");
+                    if (roamingNode.isArray()) {
+                        for (JsonNode r : roamingNode) {
+                            if (!key.equalsIgnoreCase(r.path("country").asText(""))) continue;
+                            JsonNode nets = r.path("networks");
+                            if (nets.isArray()) {
+                                for (JsonNode n : nets) {
+                                    String brand = n.path("brand").asText(null);
+                                    if (brand != null && !networkBrands.contains(brand)) networkBrands.add(brand);
+                                }
+                            }
+                        }
+                    }
+
                     String name;
-                    if ("GH".equals(country)) {
+                    if (!networkBrands.isEmpty()) {
+                        name = String.join(" + ", networkBrands) + " — " + days + "-Day Pass (" + dataStr + ")";
+                    } else if ("GH".equals(country)) {
                         if (days == 1) name = "Kumasi Flash Daily (" + dataStr + ")";
                         else if (days == 3) name = "Oseikrom Express (" + dataStr + ")";
                         else if (days == 7) name = "Greater Accra Weekly (" + dataStr + ")";
@@ -384,6 +427,7 @@ public class ZenditService {
                     plan.put("culturalInsightTitle", insight[0]);
                     plan.put("culturalInsightSymbolName", insight[1]);
                     plan.put("culturalInsightDesc", o.path("notes").asText(insight[2]));
+                    plan.put("networks", networkBrands);
                     plans.add(plan);
                 }
             }
@@ -391,13 +435,13 @@ public class ZenditService {
             Map<String, Object> result = plans.isEmpty()
                 ? Map.of("success", true, "plans", generateFallbackPlans(country))
                 : Map.of("success", true, "plans", plans);
-            offersCache.put(key, new CachedOffers(result, System.currentTimeMillis()));
+            redisCache.put("zendit:offers:" + key, result, CACHE_TTL);
             return result;
 
         } catch (Exception e) {
             log.warn("[Zendit] Get offers failed: {}", e.getMessage());
             Map<String, Object> fallback = Map.of("success", true, "plans", generateFallbackPlans(country));
-            offersCache.put(key, new CachedOffers(fallback, System.currentTimeMillis()));
+            redisCache.put("zendit:offers:" + key, fallback, CACHE_TTL);
             return fallback;
         }
     }
@@ -434,6 +478,7 @@ public class ZenditService {
         plan.put("culturalInsightTitle", picked.get("title"));
         plan.put("culturalInsightSymbolName", picked.get("symbol"));
         plan.put("culturalInsightDesc", picked.get("desc"));
+        plan.put("networks", List.of());
         return plan;
     }
 

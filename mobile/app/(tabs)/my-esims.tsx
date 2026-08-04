@@ -148,7 +148,7 @@ function ProfileSection({ esim }: { esim: ESimSubscription }) {
 
       <View style={styles.qrBox}>
         {esim.qrCodeUrl ? (
-          <Image source={{ uri: esim.qrCodeUrl }} style={styles.qrImage} resizeMode="contain" />
+          <Image source={{ uri: esim.qrCodeUrl }} style={styles.qrImage} resizeMode="contain" fadeDuration={0} />
         ) : (
           <View style={styles.qrPlaceholder}>
             <Text style={styles.qrPlaceholderIcon}>▦</Text>
@@ -548,6 +548,7 @@ export default function MyEsimsScreen() {
             source={{ uri: HERITAGE_IMAGES.networkGrid }}
             style={styles.referBg}
             imageStyle={styles.referBgImg}
+            fadeDuration={0}
           >
             <View style={styles.referOverlay} />
             <View style={styles.referContent}>

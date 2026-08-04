@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
 import { useRef, useEffect } from 'react';
 import { Animated, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { COLORS } from '../../components/styles';
+import { useApp } from '../../context/AppContext';
 
 function HomeIcon({ color }: { color: string }) {
   return (
@@ -80,6 +82,8 @@ function AnimatedTabIcon({ focused, Icon }: { focused: boolean; Icon: IconCompon
 }
 
 export default function TabsLayout() {
+  const { t } = useApp();
+  const insets = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: 'transparent' }}>
       <Tabs
@@ -90,8 +94,10 @@ export default function TabsLayout() {
             backgroundColor: 'rgba(8,8,8,0.97)',
             borderTopColor: 'rgba(77,71,50,0.3)',
             borderTopWidth: 1,
-            height: 64,
-            paddingBottom: 8,
+            // Fixed height alone doesn't clear Android's system nav bar (3-button or
+            // gesture pill) — pad by the actual bottom inset so our tab bar sits above it.
+            height: 56 + insets.bottom,
+            paddingBottom: 8 + insets.bottom,
             paddingTop: 6,
           },
           tabBarActiveTintColor: COLORS.gold,
@@ -102,28 +108,28 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: t('tabs.home'),
             tabBarIcon: ({ focused }) => <AnimatedTabIcon focused={focused} Icon={HomeIcon} />,
           }}
         />
         <Tabs.Screen
           name="plans"
           options={{
-            title: 'Explore',
+            title: t('tabs.explore'),
             tabBarIcon: ({ focused }) => <AnimatedTabIcon focused={focused} Icon={ExploreIcon} />,
           }}
         />
         <Tabs.Screen
           name="my-esims"
           options={{
-            title: 'My eSIMs',
+            title: t('tabs.myEsims'),
             tabBarIcon: ({ focused }) => <AnimatedTabIcon focused={focused} Icon={EsimIcon} />,
           }}
         />
         <Tabs.Screen
           name="account"
           options={{
-            title: 'Account',
+            title: t('tabs.account'),
             tabBarIcon: ({ focused }) => <AnimatedTabIcon focused={focused} Icon={AccountIcon} />,
           }}
         />

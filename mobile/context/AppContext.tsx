@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../utils/secureStorage';
 import { ESimPlan, ESimSubscription, PaymentRecord, ProvisionedEsim, UserProfile } from '../types';
 import { INITIAL_USER } from '../data';
 import { API_BASE } from '../config';
 import { registerPushToken } from '../hooks/usePushNotifications';
+import { Language, translate } from '../i18n/translations';
 
 export const CURRENCIES = [
   { code: 'GHS', symbol: 'GH₵', name: 'Ghana Cedi' },
@@ -51,6 +52,7 @@ const SECURE_USER_ID_KEY = 'simfinity_user_id';
 // Non-sensitive preferences → AsyncStorage
 const USER_KEY = '@simfinity_user';
 const CURRENCY_KEY = '@simfinity_currency';
+const LANGUAGE_KEY = '@simfinity_language';
 
 interface AppContextType {
   authReady: boolean;
@@ -81,6 +83,9 @@ interface AppContextType {
   currency: string;
   setCurrency: (c: string) => void;
   exchangeRates: Record<string, number>;
+  language: Language;
+  setLanguage: (l: Language) => void;
+  t: (path: string) => string;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -88,7 +93,7 @@ const AppContext = createContext<AppContextType | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [user, setUserState] = useState<UserProfile>(INITIAL_USER);
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -101,10 +106,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [referralCode, setReferralCode] = useState<string>('');
   const [currency, setCurrencyState] = useState<string>('GHS');
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(FALLBACK_RATES);
+  const [language, setLanguageState] = useState<Language>('en');
 
   const setCurrency = (c: string) => {
     setCurrencyState(c);
     AsyncStorage.setItem(CURRENCY_KEY, c).catch(() => {});
+  };
+
+  const setLanguage = (l: Language) => {
+    setLanguageState(l);
+    AsyncStorage.setItem(LANGUAGE_KEY, l).catch(() => {});
+  };
+
+  const t = useCallback((path: string) => translate(language, path), [language]);
+
+  // Exposed to consumers (e.g. the Personal Info screen) — persists edits to
+  // AsyncStorage so they survive a restart, mirroring what loginWithToken does
+  // for the initial profile. Without this, "Changes Saved Successfully" was a
+  // lie: edits only lived in memory and reverted on the next session restore.
+  const setUser = (u: UserProfile) => {
+    setUserState(u);
+    AsyncStorage.setItem(USER_KEY, JSON.stringify(u)).catch(() => {});
   };
 
   const fetchReferralCode = useCallback(async (tok: string) => {
@@ -153,11 +175,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Restore session on app start
   useEffect(() => {
     (async () => {
-      const [savedToken, savedUserId, savedUser, savedCurrency] = await Promise.all([
+      const [savedToken, savedUserId, savedUser, savedCurrency, savedLanguage] = await Promise.all([
         SecureStore.getItemAsync(SECURE_TOKEN_KEY),
         SecureStore.getItemAsync(SECURE_USER_ID_KEY),
         AsyncStorage.getItem(USER_KEY),
         AsyncStorage.getItem(CURRENCY_KEY),
+        AsyncStorage.getItem(LANGUAGE_KEY),
       ]);
       if (savedToken) {
         setToken(savedToken);
@@ -167,7 +190,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetchReferralCode(savedToken);
       }
       if (savedUser) {
-        try { setUser(JSON.parse(savedUser)); } catch { /* ignore corrupt data */ }
+        try { setUserState(JSON.parse(savedUser)); } catch { /* ignore corrupt data */ }
       }
       if (savedUserId) {
         const uid = Number(savedUserId);
@@ -176,6 +199,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       if (savedCurrency) {
         setCurrencyState(savedCurrency);
+      }
+      if (savedLanguage === 'en' || savedLanguage === 'tw') {
+        setLanguageState(savedLanguage);
       }
       setAuthReady(true);
     })();
@@ -191,7 +217,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setToken(tok);
     setUserId(uid);
     setAvatarUrl(`${API_BASE}/api/user/avatar/${uid}?t=${Date.now()}`);
-    setUser(updatedUser);
+    setUserState(updatedUser);
     setIsLoggedIn(true);
     await Promise.all([
       SecureStore.setItemAsync(SECURE_TOKEN_KEY, tok),
@@ -208,7 +234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserId(null);
     setAvatarUrl(null);
     setIsLoggedIn(false);
-    setUser(INITIAL_USER);
+    setUserState(INITIAL_USER);
     setActiveEsims([]);
     setPastEsims([]);
     setPayments([]);
@@ -270,6 +296,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currency,
         setCurrency,
         exchangeRates,
+        language,
+        setLanguage,
+        t,
       }}
     >
       {children}

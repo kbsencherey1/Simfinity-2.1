@@ -20,6 +20,8 @@ export interface ESimPlan {
   culturalInsightTitle: string;
   culturalInsightSymbolName: string;
   culturalInsightDesc: string;
+  /** Real carrier brand(s) this plan roams on (e.g. "MTN Ghana"), from Zendit — may be empty if unknown. */
+  networks?: string[];
 }
 
 export interface ESimSubscription {

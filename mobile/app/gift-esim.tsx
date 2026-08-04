@@ -125,7 +125,7 @@ export default function GiftEsimScreen() {
 
           {!!details.qrCodeUrl && (
             <View style={s.qrBox}>
-              <Image source={{ uri: details.qrCodeUrl }} style={s.qrImage} resizeMode="contain" />
+              <Image source={{ uri: details.qrCodeUrl }} style={s.qrImage} resizeMode="contain" fadeDuration={0} />
             </View>
           )}
 

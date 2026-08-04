@@ -15,76 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../../components/styles';
 import { useApp, formatCurrencyPrice } from '../../context/AppContext';
 import { INITIAL_PLANS, TOURIST_SPOTS } from '../../data';
-import { ESimPlan, GlobalHub } from '../../types';
+import { ESimPlan } from '../../types';
 import { API_BASE } from '../../config';
-
-const GLOBAL_HUBS: GlobalHub[] = [
-  {
-    id: 'ghana',
-    name: 'Accra Black Star Gateway',
-    location: 'Accra, Ghana',
-    coverage: 'Simfinity 5G Core Fiber Node (Excellent)',
-    latency: '11ms',
-    speed: '450 Mbps',
-    insight: 'The Black Star Gate in Accra symbolises sovereignty and direct backhaul access. High frequency nodes cover the vibrant tech centers and coastal markets of West Africa.',
-    symbol: 'GH',
-    localWisdomTitle: 'Adinkra: Mpatapo',
-    localWisdomMeaning: 'The knot of reconciliation and unbreakable global communication.',
-    countryCode: 'GH',
-  },
-  {
-    id: 'usa',
-    name: 'New York Silicon Alley Central',
-    location: 'New York, USA',
-    coverage: 'Simfinity Tier-1 Edge Multipath 5G',
-    latency: '8ms',
-    speed: '820 Mbps',
-    insight: 'Connecting through NYC Hub offers blazing fast routing to transatlantic cables. Perfect coverage spanning high-density downtown blocks, subways, and airport avenues.',
-    symbol: 'US',
-    localWisdomTitle: 'Smart Grid Connect',
-    localWisdomMeaning: 'Transoceanic laser synchronization for ultra-redundancy.',
-    countryCode: 'US',
-  },
-  {
-    id: 'uk',
-    name: 'London Greenwich Prime Node',
-    location: 'London, United Kingdom',
-    coverage: 'Simfinity Hyper-Speed Euro Grid (Excellent)',
-    latency: '7ms',
-    speed: '710 Mbps',
-    insight: 'Anchored at the prime meridian, London routing provides double-redundant low-latency cellular handoffs across the UK and continental Europe.',
-    symbol: 'GB',
-    localWisdomTitle: 'Meridian Precision',
-    localWisdomMeaning: 'Zero-meridian alignment for ultra-synchronized global packets.',
-    countryCode: 'GB',
-  },
-  {
-    id: 'japan',
-    name: 'Tokyo Shinjuku Fiber Backbone',
-    location: 'Tokyo, Japan',
-    coverage: 'Simfinity Ultra-Dense 5G Solid-State',
-    latency: '5ms',
-    speed: '950 Mbps',
-    insight: 'Superheated millimeter-wave cells handle immense density. Optimal coverage inside high-speed Shinkansen trains and underground hyper-hubs.',
-    symbol: 'JP',
-    localWisdomTitle: 'Zen Flow Routing',
-    localWisdomMeaning: 'Balanced state transition: seamless zero-drop handovers between antennas.',
-    countryCode: 'JP',
-  },
-  {
-    id: 'south_africa',
-    name: 'Cape Town Table Mountain Relay',
-    location: 'Cape Town, South Africa',
-    coverage: 'Simfinity Coastal 5G Wavefront (Excellent)',
-    latency: '16ms',
-    speed: '510 Mbps',
-    insight: 'Overlooking two oceans, the Table Mountain relay connects major southern submarine cables, providing beautiful, strong coastline cellular reception.',
-    symbol: 'ZA',
-    localWisdomTitle: 'Ubuntu Network',
-    localWisdomMeaning: '"I am because we are" — a distributed, community-first mesh infrastructure.',
-    countryCode: 'ZA',
-  },
-];
 
 export const POPULAR_COUNTRIES = [
   { code: 'GH', name: 'Ghana' },
@@ -204,7 +136,7 @@ export default function PlansScreen() {
               style={({ pressed }) => [styles.heritageCard, pressed && { opacity: 0.85 }]}
               onPress={() => setSelectedCountry('GH')}
             >
-              <Image source={{ uri: spot.imageUrl }} style={styles.heritageCardImg} resizeMode="cover" />
+              <Image source={{ uri: spot.imageUrl }} style={styles.heritageCardImg} resizeMode="cover" fadeDuration={0} />
               <View style={styles.heritageCardOverlay} />
               <View style={styles.heritageCardContent}>
                 <Text style={styles.heritageCardTag}>GHANA LANDMARK</Text>
@@ -375,7 +307,12 @@ function PlanCard({
       <View style={styles.planBtnRow}>
         <Pressable
           style={({ pressed }) => [styles.coverageBtn, pressed && styles.btnPressed]}
-          onPress={() => router.push(`/coverage-map?country=${country}&planName=${encodeURIComponent(plan.name)}`)}
+          onPress={() => {
+            const networksParam = plan.networks && plan.networks.length > 0
+              ? `&networks=${encodeURIComponent(plan.networks.join(','))}`
+              : '';
+            router.push(`/coverage-map?country=${country}&planName=${encodeURIComponent(plan.name)}${networksParam}`);
+          }}
         >
           <Text style={styles.coverageBtnText}>Coverage Map</Text>
         </Pressable>

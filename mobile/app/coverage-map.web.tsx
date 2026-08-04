@@ -1,17 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import MapView, { Circle, Marker } from 'react-native-maps';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../components/styles';
 import { API_BASE } from '../config';
+
+// react-native-maps has no web implementation at all (it imports native-only RN
+// internals and crashes the whole web bundle), so this is a parallel, web-native
+// implementation using react-leaflet + OpenStreetMap tiles instead. Metro/Expo Router
+// automatically prefers this file over coverage-map.tsx when bundling for web.
+// Logic (state, endpoints, filtering, GPS) mirrors coverage-map.tsx exactly — only the
+// map rendering technology differs.
 
 interface CountryCenter {
   lat: number;
@@ -22,9 +25,6 @@ interface CountryCenter {
   city: string;
 }
 
-// OpenCellID free tier limits BBOX to ~4,000,000 sq.m (~1km radius).
-// bboxSize is in degrees; 0.008° ≈ 890m at the equator → safely under the limit.
-// latDelta/lngDelta control the map viewport (a bit wider than the fetch area).
 const COUNTRY_CENTERS: Record<string, CountryCenter> = {
   GH: { lat: 5.6037,  lng: -0.187,    latDelta: 0.025, lngDelta: 0.025, bboxSize: 0.008, city: 'Accra' },
   NG: { lat: 6.5244,  lng: 3.3792,    latDelta: 0.025, lngDelta: 0.025, bboxSize: 0.008, city: 'Lagos' },
@@ -44,6 +44,7 @@ const COUNTRY_CENTERS: Record<string, CountryCenter> = {
 };
 
 const DEFAULT_CENTER: CountryCenter = COUNTRY_CENTERS.GH;
+const CITY_ZOOM = 15;
 
 interface CoveragePoint {
   lat: number;
@@ -76,7 +77,30 @@ const LEGEND = [
   { color: '#ef4444', label: 'Poor' },
 ] as const;
 
+// Leaflet's default marker icon references image files that don't resolve under
+// bundlers (a well-known Leaflet+webpack/Metro issue) — a small inline SVG sidesteps
+// it entirely and matches the app's gold branding besides.
+const goldPinIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width:22px;height:22px;border-radius:11px;background:${COLORS.gold};
+    border:2px solid #050505;box-shadow:0 0 0 2px rgba(255,215,0,0.35);
+  "></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
 type LocationStatus = 'idle' | 'locating' | 'found' | 'denied' | 'error';
+
+// Imperatively pans/zooms the Leaflet map — the web equivalent of
+// react-native-maps' `mapRef.current?.animateToRegion(...)`.
+function RecenterMap({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo([lat, lng], zoom, { duration: 0.6 });
+  }, [lat, lng, zoom, map]);
+  return null;
+}
 
 export default function CoverageMapScreen() {
   const { country = 'GH', planName = 'Coverage Map', networks = '' } = useLocalSearchParams<{
@@ -97,9 +121,7 @@ export default function CoverageMapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [networkFilterAvailable, setNetworkFilterAvailable] = useState(false);
-  const mapRef = useRef<MapView>(null);
 
-  // Each tower circle = 250m radius; visible at city-block zoom level
   const circleRadius = 250;
 
   const useMyLocation = useCallback(async () => {
@@ -121,20 +143,12 @@ export default function CoverageMapScreen() {
       };
       setMyLocation({ lat: next.lat, lng: next.lng });
       setMapCenter(next);
-      mapRef.current?.animateToRegion({
-        latitude: next.lat,
-        longitude: next.lng,
-        latitudeDelta: next.latDelta,
-        longitudeDelta: next.lngDelta,
-      }, 600);
       setLocationStatus('found');
     } catch {
       setLocationStatus('error');
     }
   }, [countryCenter]);
 
-  // Show the country center immediately (no regression / no wait on a permission
-  // prompt), then silently upgrade to the user's real GPS location if granted.
   useEffect(() => {
     useMyLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,34 +208,34 @@ export default function CoverageMapScreen() {
       </SafeAreaView>
 
       <View style={styles.mapWrap}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: countryCenter.lat,
-            longitude: countryCenter.lng,
-            latitudeDelta: countryCenter.latDelta,
-            longitudeDelta: countryCenter.lngDelta,
-          }}
+        <MapContainer
+          center={[countryCenter.lat, countryCenter.lng]}
+          zoom={CITY_ZOOM}
+          style={{ height: '100%', width: '100%', background: '#050505' }}
         >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <RecenterMap lat={mapCenter.lat} lng={mapCenter.lng} zoom={CITY_ZOOM} />
+
           {myLocation && (
-            <Marker
-              coordinate={{ latitude: myLocation.lat, longitude: myLocation.lng }}
-              title="You are here"
-              pinColor={COLORS.gold}
-            />
+            <Marker position={[myLocation.lat, myLocation.lng]} icon={goldPinIcon} />
           )}
           {points.map((pt, i) => (
             <Circle
               key={i}
-              center={{ latitude: pt.lat, longitude: pt.lng }}
+              center={[pt.lat, pt.lng]}
               radius={circleRadius}
-              fillColor={signalFill(pt.weight)}
-              strokeColor={signalStroke(pt.weight)}
-              strokeWidth={0.5}
+              pathOptions={{
+                fillColor: signalFill(pt.weight),
+                fillOpacity: 1,
+                color: signalStroke(pt.weight),
+                weight: 0.5,
+              }}
             />
           ))}
-        </MapView>
+        </MapContainer>
 
         {isLoading && (
           <View style={styles.overlay} pointerEvents="none">
@@ -244,7 +258,6 @@ export default function CoverageMapScreen() {
           </View>
         )}
 
-        {/* Tower count badge */}
         {!isLoading && points.length > 0 && (
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>
@@ -253,7 +266,6 @@ export default function CoverageMapScreen() {
           </View>
         )}
 
-        {/* Recenter on my GPS location — rendered last so it always stays on top and tappable */}
         <Pressable
           style={({ pressed }) => [styles.locateBtn, pressed && { opacity: 0.7 }]}
           onPress={useMyLocation}
@@ -279,7 +291,6 @@ export default function CoverageMapScreen() {
         )}
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <Text style={styles.legendTitle}>Signal Strength</Text>
         <View style={styles.legendRow}>
@@ -320,7 +331,6 @@ const styles = StyleSheet.create({
   headerSpacer: { minWidth: 56 },
 
   mapWrap: { flex: 1, position: 'relative' },
-  map: { flex: 1 },
 
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -329,6 +339,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 32,
+    zIndex: 1000,
   },
   overlayTitle: { color: '#fff', fontSize: 15, fontWeight: '800', textAlign: 'center' },
   overlayText: { color: COLORS.textMuted, fontSize: 12, textAlign: 'center' },
@@ -343,6 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    zIndex: 1000,
   },
   countBadgeText: { color: COLORS.gold, fontSize: 10, fontWeight: '800' },
 
@@ -359,6 +371,7 @@ const styles = StyleSheet.create({
     minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1000,
   },
   locateBtnText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
 
@@ -373,6 +386,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    zIndex: 1000,
   },
   deniedBannerText: { color: COLORS.textMuted, fontSize: 10.5, textAlign: 'center' },
 

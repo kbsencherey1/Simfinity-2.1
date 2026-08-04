@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/zendit/**").permitAll()
                 .requestMatchers("/api/paystack/**").permitAll()
                 .requestMatchers("/api/local-insight").permitAll()
+                .requestMatchers("/api/akan-proverb").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/network/coverage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchange-rates").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/gift/**").permitAll()

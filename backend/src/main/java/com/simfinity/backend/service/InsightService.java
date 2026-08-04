@@ -169,8 +169,108 @@ public class InsightService {
         "India", "France", "Mexico", "Thailand", "Colombia"
     );
 
+    // Real, well-documented Akan/Twi proverbs — used verbatim when Gemini is unavailable,
+    // and as the grounding example set in the prompt so generated ones stay authentic.
+    private static final List<Map<String, String>> PROVERB_FALLBACKS = List.of(
+        Map.of("twi", "Tikoro nkɔ agyina.", "english", "One head does not go into council.",
+            "meaning", "Two heads are better than one — good decisions need many perspectives."),
+        Map.of("twi", "Ɛberɛ te sɛ anomaa; sɛ woankyere no na ɔtu a, wonhu no bio.",
+            "english", "Time is like a bird — if you don't catch it before it flies, you'll never see it again.",
+            "meaning", "Seize the moment; time, once gone, does not return."),
+        Map.of("twi", "Ɔkɔtɔ nwo anomaa.", "english", "A crab does not give birth to a bird.",
+            "meaning", "Like father, like son — children carry the character of those who raised them."),
+        Map.of("twi", "Nyansapɔ, kwasea ntumi nsane gye sɛ ɔnyansafoɔ.",
+            "english", "The knot of wisdom, a fool cannot untie — only a wise person can.",
+            "meaning", "Only wisdom can solve a truly difficult problem."),
+        Map.of("twi", "Anomaa antu a, ɔbua da.", "english", "If a bird does not fly, it goes to bed hungry.",
+            "meaning", "Nothing ventured, nothing gained — action is required for reward."),
+        Map.of("twi", "Obi nnim ɔberempɔn ahyɛaseɛ.", "english", "Nobody knows the beginnings of a great man.",
+            "meaning", "Don't dismiss humble beginnings — greatness can come from anywhere."),
+        Map.of("twi", "Nsateaa nyinaa nnyɛ pɛ.", "english", "All fingers are not the same.",
+            "meaning", "People have different strengths, and that difference should be valued."),
+        Map.of("twi", "Obi nnim a, obi kyerɛ.", "english", "If someone doesn't know, someone teaches.",
+            "meaning", "There's no shame in learning — knowledge is meant to be shared."),
+        Map.of("twi", "Baanu soa a, emmia.", "english", "When two people carry a load, it doesn't hurt.",
+            "meaning", "Burdens shared are burdens lightened."),
+        Map.of("twi", "Ahwene pa nkasa.", "english", "Quality beads don't make noise.",
+            "meaning", "True excellence speaks for itself and needs no boasting."),
+        Map.of("twi", "Prayɛ, sɛ woyi baako a na ɛbu; wɔka bom a, ɛmmu.",
+            "english", "One broomstick breaks alone; bound together, they don't.",
+            "meaning", "In unity there is strength."),
+        Map.of("twi", "Wamma wo yɔnko antwa nkɔ a, wo nso wontwa nkɔ.",
+            "english", "If you don't let your friend cross, you won't cross either.",
+            "meaning", "Helping others clears the way for your own progress."),
+        Map.of("twi", "Woforo dua pa a, na yɛpia wo.", "english", "It is when you climb a good tree that we push you higher.",
+            "meaning", "People support those pursuing worthy goals."),
+        Map.of("twi", "Wo nsa akyi nyɛ sɛ wo nsa yam.", "english", "The back of your hand is never as sweet as your palm.",
+            "meaning", "Home is always better than anywhere else, no matter how far you travel.")
+    );
+
     public InsightService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    public Map<String, Object> getAkanProverb() {
+        if (apiKey == null || apiKey.isBlank()) {
+            return randomProverbFallback();
+        }
+
+        try {
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey;
+
+            ObjectNode requestBody = mapper.createObjectNode();
+            ArrayNode contents = mapper.createArrayNode();
+            ObjectNode contentObj = mapper.createObjectNode();
+            ArrayNode parts = mapper.createArrayNode();
+            ObjectNode part = mapper.createObjectNode();
+            part.put("text",
+                "Give me one real, well-documented traditional Akan (Twi) proverb from Ghana — never invent one. " +
+                "Provide the original Twi text with correct orthography, an accurate literal English translation, " +
+                "and a one-sentence explanation of its meaning. Respond with JSON only: " +
+                "{\"twi\": \"...\", \"english\": \"...\", \"meaning\": \"...\"}");
+            parts.add(part);
+            contentObj.set("parts", parts);
+            contentObj.put("role", "user");
+            contents.add(contentObj);
+            requestBody.set("contents", contents);
+
+            ArrayNode tools = mapper.createArrayNode();
+            ObjectNode tool = mapper.createObjectNode();
+            tool.set("google_search", mapper.createObjectNode());
+            tools.add(tool);
+            requestBody.set("tools", tools);
+
+            ObjectNode genConfig = mapper.createObjectNode();
+            genConfig.put("responseMimeType", "application/json");
+            requestBody.set("generationConfig", genConfig);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(requestBody), headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, entity, JsonNode.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String text = response.getBody().path("candidates").path(0).path("content")
+                    .path("parts").path(0).path("text").asText("{}");
+                Map<String, Object> parsed = mapper.readValue(text.trim(), Map.class);
+                if (parsed.get("twi") != null && parsed.get("english") != null) {
+                    parsed.put("isFallback", false);
+                    return parsed;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Insight] Akan proverb generation unavailable: {}", e.getMessage());
+        }
+
+        return randomProverbFallback();
+    }
+
+    private Map<String, Object> randomProverbFallback() {
+        Map<String, String> pick = PROVERB_FALLBACKS.get((int) (Math.random() * PROVERB_FALLBACKS.size()));
+        Map<String, Object> result = new HashMap<>(pick);
+        result.put("isFallback", true);
+        return result;
     }
 
     public Map<String, Object> getLocalInsight(String countryParam) {
@@ -183,7 +283,7 @@ public class InsightService {
         }
 
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey;
 
             ObjectNode requestBody = mapper.createObjectNode();
 

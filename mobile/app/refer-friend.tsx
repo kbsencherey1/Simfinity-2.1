@@ -99,6 +99,7 @@ export default function ReferFriendScreen() {
               source={{ uri: HERITAGE_IMAGES.networkGrid }}
               style={styles.heroImage}
               resizeMode="cover"
+              fadeDuration={0}
             />
             <View style={styles.heroOverlay} />
           </View>

@@ -63,6 +63,7 @@ export function AvatarImage({ url, size = 64, borderColor = '#FFD700', borderWid
           source={{ uri: url }}
           style={{ width: size - borderWidth * 2, height: size - borderWidth * 2, borderRadius: (size - borderWidth * 2) / 2 }}
           resizeMode="cover"
+          fadeDuration={0}
           onError={() => setFailed(true)}
         />
       )}

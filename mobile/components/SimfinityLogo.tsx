@@ -12,7 +12,7 @@ const logoAsset = require('../assets/logo.png');
 export function SimfinityLogo({ size = 80, showText = false }: Props) {
   return (
     <View style={styles.wrapper}>
-      <Image source={logoAsset} style={{ width: size, height: size * 0.452 }} resizeMode="contain" />
+      <Image source={logoAsset} style={{ width: size, height: size * 0.452 }} resizeMode="contain" fadeDuration={0} />
       {showText && (
         <Text style={styles.brandText}>SIMFINITY</Text>
       )}
@@ -23,7 +23,7 @@ export function SimfinityLogo({ size = 80, showText = false }: Props) {
 export function SimfinityNavbarLogo({ size = 48 }: { size?: number }) {
   return (
     <View style={styles.navRow}>
-      <Image source={logoAsset} style={{ width: size, height: size * 0.452 }} resizeMode="contain" />
+      <Image source={logoAsset} style={{ width: size, height: size * 0.452 }} resizeMode="contain" fadeDuration={0} />
       <Text style={[styles.navBrand, { fontSize: size * 0.28, letterSpacing: size * 0.042 }]}>SIMFINITY</Text>
     </View>
   );

@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../components/styles';
+import { useApp } from '../context/AppContext';
 
 export const ONBOARDING_SEEN_KEY = '@simfinity_has_seen_onboarding_v2';
 
@@ -22,38 +23,39 @@ const { width } = Dimensions.get('window');
 type Slide = {
   id: string;
   imageUrl: string;
-  headline: string;
-  subtext: string;
+  headlineKey: string;
+  subtextKey: string;
 };
 
 const SLIDES: Slide[] = [
   {
     id: 'compare',
     imageUrl: 'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1200&q=80',
-    headline: 'Compare eSIM Plans Worldwide',
-    subtext: 'Browse and compare data plans from 190+ countries side by side, so you always know you’re getting the best price and speed before you fly.',
+    headlineKey: 'onboarding.slide1Headline',
+    subtextKey: 'onboarding.slide1Subtext',
   },
   {
     id: 'instant',
     imageUrl: 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=1200&q=80',
-    headline: 'Instant Activation',
-    subtext: 'No physical SIM, no store visit. Scan a QR code and you’re connected in under a minute, right from the app.',
+    headlineKey: 'onboarding.slide2Headline',
+    subtextKey: 'onboarding.slide2Subtext',
   },
   {
     id: 'roaming',
     imageUrl: 'https://images.unsplash.com/photo-1763455892848-39bbc7ca90a0?auto=format&fit=crop&w=1200&q=80',
-    headline: 'No Roaming Fees',
-    subtext: 'Skip the surprise carrier charges. Pay one upfront price for local-rate data anywhere your eSIM plan covers.',
+    headlineKey: 'onboarding.slide3Headline',
+    subtextKey: 'onboarding.slide3Subtext',
   },
   {
     id: 'gift',
     imageUrl: 'https://images.unsplash.com/photo-1625552187571-7ee60ac43d2b?auto=format&fit=crop&w=1200&q=80',
-    headline: 'Gift a Plan to Someone Traveling',
-    subtext: 'Sending data has never been easier. Gift an eSIM plan to a friend or family member in seconds, wherever they’re headed.',
+    headlineKey: 'onboarding.slide4Headline',
+    subtextKey: 'onboarding.slide4Subtext',
   },
 ];
 
 export default function OnboardingScreen() {
+  const { t } = useApp();
   const [index, setIndex] = useState(0);
   const listRef = useRef<Animated.FlatList<Slide>>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -87,7 +89,7 @@ export default function OnboardingScreen() {
         <View style={styles.topBar}>
           {!isLast ? (
             <Pressable onPress={finish} hitSlop={12} style={({ pressed }) => pressed && { opacity: 0.6 }}>
-              <Text style={styles.skipText}>Skip</Text>
+              <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
             </Pressable>
           ) : (
             <View style={styles.skipPlaceholder} />
@@ -112,11 +114,16 @@ export default function OnboardingScreen() {
           renderItem={({ item }) => (
             <View style={styles.slide}>
               <View style={styles.illustration}>
-                <Image source={{ uri: item.imageUrl }} style={styles.illustrationImg} resizeMode="cover" />
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={styles.illustrationImg}
+                  resizeMode="cover"
+                  fadeDuration={0}
+                />
                 <View style={styles.illustrationOverlay} />
               </View>
-              <Text style={styles.headline}>{item.headline}</Text>
-              <Text style={styles.subtext}>{item.subtext}</Text>
+              <Text style={styles.headline}>{t(item.headlineKey)}</Text>
+              <Text style={styles.subtext}>{t(item.subtextKey)}</Text>
             </View>
           )}
         />
@@ -142,7 +149,7 @@ export default function OnboardingScreen() {
           style={({ pressed }) => [styles.primaryBtn, pressed && styles.primaryBtnPressed]}
           onPress={handleNext}
         >
-          <Text style={styles.primaryBtnText}>{isLast ? 'Get Started' : 'Next'}</Text>
+          <Text style={styles.primaryBtnText}>{isLast ? t('onboarding.getStarted') : t('onboarding.next')}</Text>
         </Pressable>
       </SafeAreaView>
     </View>

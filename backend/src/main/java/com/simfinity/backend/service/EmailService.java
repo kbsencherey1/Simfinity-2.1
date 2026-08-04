@@ -15,11 +15,11 @@ public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
-    // Use onboarding@resend.dev until a custom domain is verified in Resend dashboard
-    private static final String FROM = "Simfinity <onboarding@resend.dev>";
-    private static final String RESEND_URL = "https://api.resend.com/emails";
+    private static final String FROM_NAME = "Simfinity";
+    private static final String FROM_EMAIL = "kwasisencherey28@gmail.com";
+    private static final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 
-    @Value("${resend.api.key:}")
+    @Value("${brevo.api.key:}")
     private String apiKey;
 
     @Value("${app.base-url:http://localhost:3000}")
@@ -102,21 +102,21 @@ public class EmailService {
     private void send(String toEmail, String subject, String html) {
         String key = apiKey;
         if (key == null || key.isBlank()) {
-            log.warn("[Email] RESEND_API_KEY not set — skipping send to {}", toEmail);
+            log.warn("[Email] BREVO_API_KEY not set — skipping send to {}", toEmail);
             return;
         }
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(key);
+            headers.set("api-key", key);
             headers.setContentType(MediaType.APPLICATION_JSON);
             Map<String, Object> body = Map.of(
-                "from", FROM,
-                "to", List.of(toEmail),
+                "sender", Map.of("name", FROM_NAME, "email", FROM_EMAIL),
+                "to", List.of(Map.of("email", toEmail)),
                 "subject", subject,
-                "html", html
+                "htmlContent", html
             );
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            ResponseEntity<?> res = restTemplate.postForEntity(RESEND_URL, entity, Void.class);
+            ResponseEntity<?> res = restTemplate.postForEntity(BREVO_URL, entity, Void.class);
             log.info("[Email] Sent '{}' to {} — status {}", subject, toEmail, res.getStatusCode());
         } catch (Exception e) {
             log.warn("[Email] Failed to send '{}' to {}: {}", subject, toEmail, e.getMessage());

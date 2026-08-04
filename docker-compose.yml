@@ -24,6 +24,15 @@ services:
     depends_on:
       - postgres
 
+  redis:
+    image: redis:7-alpine
+    container_name: simfinity-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   backend:
     build:
       context: ./backend
@@ -39,18 +48,22 @@ services:
       DB_NAME: simfinity
       DB_USER: simfinity
       DB_PASSWORD: simfinity
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # Set your real API keys here or in a .env file
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
       ZENDIT_API_KEY: ${ZENDIT_API_KEY:-}
       OPENCELLID_API_KEY: ${OPENCELLID_API_KEY:-}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
     volumes:
       - avatars_data:/app/avatars
     depends_on:
       - postgres
+      - redis
 
 volumes:
   postgres_data:
   avatars_data:
+  redis_data:

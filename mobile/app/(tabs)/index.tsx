@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SimfinityNavbarLogo } from '../../components/SimfinityLogo';
 import { COLORS, glass } from '../../components/styles';
 import { HERITAGE_IMAGES } from '../../data';
+import { useApp } from '../../context/AppContext';
 
 import { API_BASE } from '../../config';
 
@@ -27,11 +28,28 @@ const TOUR_HIGHLIGHTS = [
 ];
 
 export default function HomeScreen() {
+  const { t } = useApp();
   const [insight, setInsight] = useState<{ country: string; title: string; fact: string; sources?: { title: string; url: string }[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState('');
   const [tourVisible, setTourVisible] = useState(false);
+  const [proverb, setProverb] = useState<{ twi: string; english: string; meaning?: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchProverb = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/akan-proverb`);
+        if (res.ok && !cancelled) setProverb(await res.json());
+      } catch {
+        // Decorative content — fail silently and keep whatever was shown before
+      }
+    };
+    fetchProverb();
+    // Auto-rotate to a new proverb periodically instead of requiring a manual tap
+    const interval = setInterval(fetchProverb, 15000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   const fetchInsight = async (countryName?: string) => {
     setIsLoading(true);
@@ -44,7 +62,6 @@ export default function HomeScreen() {
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setInsight(data);
-      if (data.country) setSelectedCountry(data.country);
     } catch {
       setError('Insight requires the server. Try connecting to your local API.');
     } finally {
@@ -52,14 +69,15 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchRandom = () => {
-    const idx = Math.floor(Math.random() * SAMPLE_COUNTRIES.length);
-    const country = SAMPLE_COUNTRIES[idx];
-    setSelectedCountry(country);
-    fetchInsight(country);
-  };
-
-  useEffect(() => { fetchInsight(); }, []);
+  useEffect(() => {
+    fetchInsight();
+    // Auto-rotate to a new spotlight periodically instead of requiring a manual tap
+    const interval = setInterval(() => {
+      const idx = Math.floor(Math.random() * SAMPLE_COUNTRIES.length);
+      fetchInsight(SAMPLE_COUNTRIES[idx]);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.root}>
@@ -72,22 +90,26 @@ export default function HomeScreen() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
         {/* Welcome Banner */}
         <View style={[glass.panel, styles.welcomeCard]}>
-          <Text style={styles.welcomeTitle}>Simfinity Global</Text>
+          <Text style={styles.welcomeTitle}>{t('home.welcomeTitle')}</Text>
           <Text style={styles.welcomeSub}>
-            Seamless travel eSIM coverage across beautiful Ghana, designed with local pride.
+            {t('home.welcomeSub')}
           </Text>
           <View style={styles.welcomeBtnRow}>
             <Pressable
               style={({ pressed }) => [styles.goldBtn, pressed && styles.goldBtnPressed]}
               onPress={() => router.push('/(tabs)/plans')}
             >
-              <Text style={styles.goldBtnText}>FIND PLANS</Text>
+              <Text style={styles.goldBtnText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+                {t('home.findPlans')}
+              </Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.tourBtn, pressed && styles.tourBtnPressed]}
               onPress={() => setTourVisible(true)}
             >
-              <Text style={styles.tourBtnText}>SIMFINITY TOUR</Text>
+              <Text style={styles.tourBtnText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+                {t('home.simfinityTour')}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -99,18 +121,21 @@ export default function HomeScreen() {
             style={styles.heroImage}
             imageStyle={{ borderRadius: 16 }}
             resizeMode="cover"
+            fadeDuration={0}
           >
             <View style={styles.heroOverlay}>
-              <Text style={styles.heroTag}>NATIONWIDE COVERAGE</Text>
-              <Text style={styles.heroTitle}>Stay Connected Anywhere</Text>
+              <Text style={styles.heroTag}>{t('home.proverbTag')}</Text>
+              <Text style={styles.heroTitle}>
+                {proverb?.twi ?? 'Tikoro nkɔ agyina.'}
+              </Text>
               <Text style={styles.heroSub}>
-                From the bustling markets of Kejetia to the serene shores of Busua.
+                {proverb?.english ?? 'One head does not go into council.'}
               </Text>
               <Pressable
                 onPress={() => router.push('/(tabs)/plans')}
                 style={({ pressed }) => pressed && { opacity: 0.6 }}
               >
-                <Text style={styles.heroLink}>Browse High-Speed Plans</Text>
+                <Text style={styles.heroLink}>{t('home.browsePlans')}</Text>
               </Pressable>
             </View>
           </ImageBackground>
@@ -118,38 +143,10 @@ export default function HomeScreen() {
 
         {/* AI Insight */}
         <View style={[glass.panel, { padding: 20, gap: 14 }]}>
-          <View style={styles.insightHeaderRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>Global Heritage Spotlights</Text>
-              <Text style={styles.sectionSub}>Real-time travel trivia from around the world.</Text>
-            </View>
-            <Pressable
-              onPress={fetchRandom}
-              style={({ pressed }) => [styles.randomBtn, pressed && styles.pressed]}
-            >
-              <Text style={styles.randomBtnText}>Random</Text>
-            </Pressable>
+          <View>
+            <Text style={styles.sectionTitle}>{t('home.spotlightTitle')}</Text>
+            <Text style={styles.sectionSub}>{t('home.spotlightSub')}</Text>
           </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.countryRow}>
-              {SAMPLE_COUNTRIES.map(c => (
-                <Pressable
-                  key={c}
-                  onPress={() => { setSelectedCountry(c); fetchInsight(c); }}
-                  style={({ pressed }) => [
-                    styles.countryChip,
-                    selectedCountry === c && styles.countryChipActive,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={[styles.countryChipText, selectedCountry === c && styles.countryChipTextActive]}>
-                    {c}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
 
           {isLoading ? (
             <View style={{ gap: 10, paddingVertical: 4 }}>
@@ -275,12 +272,13 @@ const styles = StyleSheet.create({
   welcomeCard: { padding: 20, gap: 10 },
   welcomeTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
   welcomeSub: { color: COLORS.textMuted, fontSize: 13, lineHeight: 20 },
-  welcomeBtnRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  welcomeBtnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   goldBtn: {
     backgroundColor: COLORS.gold,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
+    flexShrink: 1,
   },
   goldBtnPressed: { backgroundColor: '#e6c200', transform: [{ scale: 0.97 }] },
   goldBtnText: { color: '#000', fontWeight: '800', fontSize: 12, letterSpacing: 1 },
@@ -289,6 +287,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
+    flexShrink: 1,
     borderColor: 'rgba(255,215,0,0.3)',
   },
   tourBtnPressed: { backgroundColor: 'rgba(255,215,0,0.08)', transform: [{ scale: 0.97 }] },
@@ -304,34 +303,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heroTag: { color: COLORS.gold, fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  heroTitle: { color: '#fff', fontSize: 20, fontWeight: '800' },
+  heroTitle: { color: '#fff', fontSize: 20, fontWeight: '800', fontStyle: 'italic' },
   heroSub: { color: '#e5e5e5', fontSize: 12, lineHeight: 18 },
   heroLink: { color: COLORS.gold, fontSize: 11, fontWeight: '700', marginTop: 8 },
 
-  insightHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   sectionTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
   sectionSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
-  randomBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.3)',
-    marginTop: 2,
-  },
-  randomBtnText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
-  countryRow: { flexDirection: 'row', gap: 6 },
-  countryChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: COLORS.clay,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  countryChipActive: { backgroundColor: COLORS.gold },
-  countryChipText: { color: COLORS.textMuted, fontSize: 11, fontWeight: '600' },
-  countryChipTextActive: { color: '#000' },
   loadingBox: { alignItems: 'center', gap: 8, paddingVertical: 20 },
   loadingText: { color: COLORS.textDim, fontSize: 12 },
   errorBox: { alignItems: 'center', gap: 12, paddingVertical: 16 },

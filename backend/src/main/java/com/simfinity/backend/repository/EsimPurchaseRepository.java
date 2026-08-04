@@ -12,4 +12,6 @@ public interface EsimPurchaseRepository extends JpaRepository<EsimPurchase, Long
     Optional<EsimPurchase> findByGiftToken(String giftToken);
     Optional<EsimPurchase> findByIdAndUser(Long id, User user);
     boolean existsByUser(User user);
+    boolean existsByTransactionId(String transactionId);
+    Optional<EsimPurchase> findByTransactionId(String transactionId);
 }

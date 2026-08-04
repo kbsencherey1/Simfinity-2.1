@@ -20,7 +20,7 @@ import { HERITAGE_IMAGES } from '../data';
 import { API_BASE } from '../config';
 
 export default function LoginScreen() {
-  const { loginWithToken } = useApp();
+  const { loginWithToken, t } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +56,7 @@ export default function LoginScreen() {
         source={{ uri: HERITAGE_IMAGES.loginPattern }}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
+        fadeDuration={0}
       >
         <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.82)' }]} />
       </ImageBackground>
@@ -71,14 +72,14 @@ export default function LoginScreen() {
           >
             <View style={styles.logoArea}>
               <SimfinityLogo size={130} showText />
-              <Text style={styles.tagline}>GLOBAL CONNECTIVITY WITH LOCAL SOUL</Text>
+              <Text style={styles.tagline}>{t('login.tagline')}</Text>
             </View>
 
             <View style={[glass.panel, styles.card]}>
-              <Text style={styles.heading}>Welcome Back</Text>
+              <Text style={styles.heading}>{t('login.heading')}</Text>
 
               <View style={styles.field}>
-                <Text style={styles.label}>EMAIL ADDRESS</Text>
+                <Text style={styles.label}>{t('login.emailLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={styles.inputText}
@@ -91,7 +92,7 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>PASSWORD</Text>
+                <Text style={styles.label}>{t('login.passwordLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={[styles.inputText, { flex: 1 }]}
@@ -103,13 +104,13 @@ export default function LoginScreen() {
                     onPress={() => setShowPassword(!showPassword)}
                     style={({ pressed }) => [styles.showHideBtn, pressed && { opacity: 0.6 }]}
                   >
-                    <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={styles.showHideText}>{showPassword ? t('login.hide') : t('login.show')}</Text>
                   </Pressable>
                 </View>
               </View>
 
               <Pressable style={styles.forgotWrap} onPress={() => router.push('/forgot-password')}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>{t('login.forgotPassword')}</Text>
               </Pressable>
 
               {error && <Text style={styles.errorText}>{error}</Text>}
@@ -119,20 +120,20 @@ export default function LoginScreen() {
                 onPress={handleLogin}
                 disabled={loading}
               >
-                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryBtnText}>Sign In</Text>}
+                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryBtnText}>{t('common.signIn')}</Text>}
               </Pressable>
 
               <View style={kenteDivider.line} />
 
               <View style={styles.switchRow}>
-                <Text style={styles.switchText}>Don't have an account? </Text>
+                <Text style={styles.switchText}>{t('login.noAccount')}</Text>
                 <Pressable onPress={() => router.push('/signup')}>
-                  <Text style={styles.switchLink}>Create Account</Text>
+                  <Text style={styles.switchLink}>{t('common.createAccount')}</Text>
                 </Pressable>
               </View>
             </View>
 
-            <Text style={styles.footer}>ROOTED IN GHANA</Text>
+            <Text style={styles.footer}>{t('login.footer')}</Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -149,7 +150,14 @@ const styles = StyleSheet.create({
   heading: { color: '#fff', fontSize: 22, fontWeight: '800' },
   field: { gap: 6 },
   label: { color: COLORS.textDim, fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  inputText: { color: '#fff', fontSize: 14, flex: 1 },
+  inputText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+    paddingVertical: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
   showHideBtn: { paddingHorizontal: 8, paddingVertical: 4 },
   showHideText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
   forgotWrap: { alignSelf: 'flex-end' },

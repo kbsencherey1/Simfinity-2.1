@@ -7,9 +7,12 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
+  Modal,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { WebView, WebViewNavigation } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../components/styles';
 import { useApp } from '../context/AppContext';
@@ -35,6 +38,9 @@ export default function CheckoutScreen() {
   const [payError, setPayError] = useState<string | null>(null);
   const [rewards, setRewards] = useState<UnclaimedReward[]>([]);
   const [appliedRewardId, setAppliedRewardId] = useState<number | null>(null);
+  // Android can't force-close a Chrome Custom Tab (see startPayment), so Paystack is shown
+  // in an in-app WebView there instead — a component we fully control and can close ourselves.
+  const [webViewVisible, setWebViewVisible] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -51,9 +57,13 @@ export default function CheckoutScreen() {
     ? Math.round(plan.priceGhs * (1 - appliedReward.discountPercent / 100) * 100) / 100
     : plan.priceGhs;
 
-  const doVerify = async (ref: string) => {
-    setIsVerifying(true);
-    setPayError(null);
+  // `silent` is used while polling in the background during checkout: a "not yet paid"
+  // response is expected and shouldn't surface as an error on every failed attempt.
+  const doVerify = async (ref: string, opts?: { silent?: boolean }): Promise<boolean> => {
+    if (!opts?.silent) {
+      setIsVerifying(true);
+      setPayError(null);
+    }
     try {
       const body: Record<string, unknown> = {
         planId: plan.id,
@@ -91,15 +101,44 @@ export default function CheckoutScreen() {
           addSubscription(plan);
           router.push('/activate-esim');
         }
-      } else {
+        return true;
+      }
+      if (!opts?.silent) {
         setPayError(data?.error || `Payment not yet confirmed (status ${res.status}). Complete the transaction and try again.`);
       }
+      return false;
     } catch {
-      setPayError('Verification error. Please try again.');
+      if (!opts?.silent) {
+        setPayError('Verification error. Please try again.');
+      }
+      return false;
     } finally {
-      setIsVerifying(false);
+      if (!opts?.silent) {
+        setIsVerifying(false);
+      }
     }
   };
+
+  // Polls while the Android in-app WebView checkout is open. Unlike the iOS Custom Tab
+  // flow, closing this is just `setWebViewVisible(false)` — a real state change on a
+  // component we render ourselves, not a best-effort request to the OS.
+  useEffect(() => {
+    if (!webViewVisible || !reference || Platform.OS !== 'android') return;
+    let cancelled = false;
+    const pollTimer = setInterval(async () => {
+      if (cancelled) return;
+      const success = await doVerify(reference, { silent: true });
+      if (success && !cancelled) {
+        cancelled = true;
+        setWebViewVisible(false);
+      }
+    }, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(pollTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webViewVisible, reference]);
 
   const startPayment = async () => {
     setIsInitializing(true);
@@ -124,10 +163,41 @@ export default function CheckoutScreen() {
         const authUrl = data.authorization_url;
         setPaymentUrl(authUrl);
         setReference(ref);
-        // Open Paystack in in-app browser; auto-closes when Paystack redirects to simfinity://
+
+        if (Platform.OS === 'android') {
+          // Shown in an in-app WebView (see the <Modal> below) instead of a Custom Tab —
+          // its polling effect handles closing it; nothing more to do here.
+          setWebViewVisible(true);
+          return;
+        }
+
+        // iOS/Web: poll in the background while Paystack's page is open, and force-close
+        // it the instant we detect success — rather than waiting on Paystack's own
+        // redirect, which can lag behind or need a manual tap on their success screen.
+        let confirmed = false;
+        const pollTimer = setInterval(async () => {
+          if (confirmed) return;
+          const success = await doVerify(ref, { silent: true });
+          if (success) {
+            confirmed = true;
+            clearInterval(pollTimer);
+            try {
+              WebBrowser.dismissAuthSession();
+            } catch {
+              // Best-effort — the fallback one-shot verify below still runs once the
+              // browser actually closes, so a failed dismiss here isn't fatal.
+            }
+          }
+        }, 2500);
+
         await WebBrowser.openAuthSessionAsync(authUrl, 'simfinity://');
-        // Auto-verify once the browser closes (via redirect or manual close)
-        await doVerify(ref);
+        clearInterval(pollTimer);
+
+        // Browser closed via redirect or manual close before polling caught it — do the
+        // normal one-shot verify (skipped entirely if polling already handled it above).
+        if (!confirmed) {
+          await doVerify(ref);
+        }
       } else {
         setPayError(data?.error || `Failed to initialize payment (status ${res.status}).`);
       }
@@ -140,6 +210,25 @@ export default function CheckoutScreen() {
 
   const verifyPayment = () => {
     if (reference) doVerify(reference);
+  };
+
+  // Paystack's callback_url ("simfinity://payment-complete") isn't a real http(s) address,
+  // so the WebView must never actually try to load it — intercept it before it starts,
+  // close the modal, and do one final check in case this beats the background poll to it.
+  // Must return synchronously (Android requires this), so doVerify runs unawaited.
+  const handleShouldStartLoad = (request: WebViewNavigation): boolean => {
+    if (request.url.startsWith('simfinity://')) {
+      setWebViewVisible(false);
+      if (reference) doVerify(reference);
+      return false;
+    }
+    return true;
+  };
+
+  const closeWebViewManually = () => {
+    setWebViewVisible(false);
+    // The payment may have already succeeded right before they closed it — one last check.
+    if (reference) doVerify(reference, { silent: true });
   };
 
   return (
@@ -246,7 +335,14 @@ export default function CheckoutScreen() {
             <View style={styles.paymentBtns}>
               <Pressable
                 style={({ pressed }) => [styles.reopenBtn, pressed && { opacity: 0.7 }]}
-                onPress={() => paymentUrl && WebBrowser.openAuthSessionAsync(paymentUrl, 'simfinity://')}
+                onPress={() => {
+                  if (!paymentUrl) return;
+                  if (Platform.OS === 'android') {
+                    setWebViewVisible(true);
+                  } else {
+                    WebBrowser.openAuthSessionAsync(paymentUrl, 'simfinity://');
+                  }
+                }}
               >
                 <Text style={styles.reopenBtnText}>Reopen Portal</Text>
               </Pressable>
@@ -301,6 +397,34 @@ export default function CheckoutScreen() {
         )}
         <Text style={styles.stickyNote}>Encrypted & Secure checkout powered by Paystack</Text>
       </View>
+
+      {/* Android-only: in-app checkout, since Custom Tabs can't be force-closed (see startPayment) */}
+      <Modal visible={webViewVisible} animationType="slide" onRequestClose={closeWebViewManually}>
+        <View style={styles.webViewRoot}>
+          <SafeAreaView edges={['top']} style={styles.webViewHeader}>
+            <Pressable
+              style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
+              onPress={closeWebViewManually}
+            >
+              <Text style={styles.backIcon}>✕</Text>
+            </Pressable>
+            <Text style={styles.headerLabel}>SECURE CHECKOUT</Text>
+            <View style={{ width: 36 }} />
+          </SafeAreaView>
+          {paymentUrl && (
+            <WebView
+              source={{ uri: paymentUrl }}
+              onShouldStartLoadWithRequest={handleShouldStartLoad}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.webViewLoading}>
+                  <ActivityIndicator color={COLORS.gold} size="large" />
+                </View>
+              )}
+            />
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -329,6 +453,24 @@ const styles = StyleSheet.create({
   },
   backIcon: { color: '#fff', fontSize: 18, fontWeight: '700' },
   headerLabel: { color: COLORS.gold, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+
+  webViewRoot: { flex: 1, backgroundColor: '#050505' },
+  webViewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(19,19,19,0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(77,71,50,0.3)',
+  },
+  webViewLoading: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#050505',
+  },
   scroll: { padding: 16, gap: 14, paddingBottom: 120 },
   title: { color: '#fff', fontSize: 22, fontWeight: '800', textAlign: 'center' },
   sub: { color: COLORS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },

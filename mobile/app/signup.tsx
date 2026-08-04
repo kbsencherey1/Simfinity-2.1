@@ -17,7 +17,7 @@ import { useApp } from '../context/AppContext';
 import { API_BASE } from '../config';
 
 export default function SignUpScreen() {
-  const { loginWithToken } = useApp();
+  const { loginWithToken, t } = useApp();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,13 +73,13 @@ export default function SignUpScreen() {
             </Pressable>
 
             <View style={styles.header}>
-              <Text style={styles.heading}>Create Account</Text>
-              <Text style={styles.sub}>Start your global connection in West Africa.</Text>
+              <Text style={styles.heading}>{t('signup.heading')}</Text>
+              <Text style={styles.sub}>{t('signup.sub')}</Text>
             </View>
 
             <View style={[glass.panel, styles.card]}>
               <View style={styles.field}>
-                <Text style={styles.label}>FULL NAME</Text>
+                <Text style={styles.label}>{t('signup.fullNameLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={styles.inputText}
@@ -90,7 +90,7 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>EMAIL ADDRESS</Text>
+                <Text style={styles.label}>{t('signup.emailLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={styles.inputText}
@@ -103,7 +103,7 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>PASSWORD</Text>
+                <Text style={styles.label}>{t('signup.passwordLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={[styles.inputText, { flex: 1 }]}
@@ -115,13 +115,13 @@ export default function SignUpScreen() {
                     onPress={() => setShowPassword(!showPassword)}
                     style={({ pressed }) => [styles.showHideBtn, pressed && { opacity: 0.6 }]}
                   >
-                    <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={styles.showHideText}>{showPassword ? t('login.hide') : t('login.show')}</Text>
                   </Pressable>
                 </View>
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>REFERRAL CODE (OPTIONAL)</Text>
+                <Text style={styles.label}>{t('signup.referralLabel')}</Text>
                 <View style={glass.input}>
                   <TextInput
                     style={styles.inputText}
@@ -146,7 +146,9 @@ export default function SignUpScreen() {
                   I agree to the{' '}
                   <Text style={styles.termsLink}>Terms of Service</Text>
                   {' '}and{' '}
-                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                  <Text style={styles.termsLink} onPress={() => router.push('/privacy-policy')}>
+                    Privacy Policy
+                  </Text>
                 </Text>
               </Pressable>
 
@@ -157,15 +159,15 @@ export default function SignUpScreen() {
                 onPress={handleRegister}
                 disabled={loading}
               >
-                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryBtnText}>Register & Connect</Text>}
+                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryBtnText}>{t('signup.registerButton')}</Text>}
               </Pressable>
 
               <View style={kenteDivider.line} />
 
               <View style={styles.switchRow}>
-                <Text style={styles.switchText}>Already have an account? </Text>
+                <Text style={styles.switchText}>{t('signup.haveAccount')}</Text>
                 <Pressable onPress={() => router.replace('/login')}>
-                  <Text style={styles.switchLink}>Log In</Text>
+                  <Text style={styles.switchLink}>{t('common.logIn')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -197,7 +199,14 @@ const styles = StyleSheet.create({
   card: { padding: 24, gap: 16 },
   field: { gap: 6 },
   label: { color: COLORS.textDim, fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  inputText: { color: '#fff', fontSize: 14, flex: 1 },
+  inputText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+    paddingVertical: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
   showHideBtn: { paddingHorizontal: 8, paddingVertical: 4 },
   showHideText: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
   termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 4 },

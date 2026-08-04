@@ -257,6 +257,7 @@ export default function ActivateEsimScreen() {
                     source={{ uri: provisionedEsim.qrCodeUrl }}
                     style={styles.qrImage}
                     resizeMode="contain"
+                    fadeDuration={0}
                   />
                 </View>
               ) : (

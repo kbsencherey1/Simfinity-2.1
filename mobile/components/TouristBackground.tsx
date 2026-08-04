@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, View, Dimensions } from 'react-native';
+import { Animated, Image, StyleSheet, View, Dimensions, Platform } from 'react-native';
 import { TOURIST_SPOTS } from '../data';
+
+// react-native-web doesn't reflect an Animated.Value's initial/un-started value in the
+// rendered style when useNativeDriver is true (opacity gets stuck at 0 until a JS-driven
+// update occurs) — falling back to the JS driver on web avoids that.
+const NATIVE_DRIVER = Platform.OS !== 'web';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,8 +42,8 @@ export function TouristBackgroundProvider({ children }: { children: React.ReactN
       const next = (idx + 1) % TOURIST_SPOTS.length;
       // Fade next in first, then fade current out — no gap between images
       Animated.sequence([
-        Animated.timing(opacities[next], { toValue: 1, duration: 1000, useNativeDriver: true }),
-        Animated.timing(opacities[idx], { toValue: 0, duration: 600, useNativeDriver: true }),
+        Animated.timing(opacities[next], { toValue: 1, duration: 1000, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(opacities[idx], { toValue: 0, duration: 600, useNativeDriver: NATIVE_DRIVER }),
       ]).start();
       idx = next;
     }, 5000);
