@@ -1,0 +1,66 @@
+databases:
+  - name: simfinity-db
+    plan: free
+    databaseName: simfinity
+    user: simfinity
+
+services:
+  - type: redis
+    name: simfinity-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: simfinity-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    healthCheckPath: /api/exchange-rates
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: simfinity-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: simfinity-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: simfinity-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: simfinity-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: simfinity-db
+          property: password
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: simfinity-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: simfinity-redis
+          property: port
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: ZENDIT_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENCELLID_API_KEY
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: APP_WEB_URL
+        sync: false
