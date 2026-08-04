@@ -34,9 +34,6 @@ public class User {
     private boolean emailVerified = false;
 
     @Column(length = 64, unique = true)
-    private String verificationToken;
-
-    @Column(length = 64, unique = true)
     private String resetToken;
 
     private LocalDateTime resetTokenExpiry;
@@ -73,9 +70,6 @@ public class User {
 
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
-
-    public String getVerificationToken() { return verificationToken; }
-    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
 
     public String getResetToken() { return resetToken; }
     public void setResetToken(String resetToken) { this.resetToken = resetToken; }

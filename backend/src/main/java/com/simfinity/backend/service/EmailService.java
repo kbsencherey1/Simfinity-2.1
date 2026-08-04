@@ -22,8 +22,8 @@ public class EmailService {
     @Value("${brevo.api.key:}")
     private String apiKey;
 
-    @Value("${app.base-url:http://localhost:3000}")
-    private String appBaseUrl;
+    @Value("${app.web-url:http://localhost:8090}")
+    private String webBaseUrl;
 
     private final RestTemplate restTemplate;
 
@@ -33,20 +33,18 @@ public class EmailService {
 
     // ── Email Verification ────────────────────────────────────────────────────
 
-    public void sendVerificationEmail(String toEmail, String token) {
-        String link = appBaseUrl + "/api/auth/verify-email?token=" + token;
-        String html = baseTemplate(
+    public void sendVerificationEmail(String toEmail, String otpCode) {
+        String html = otpTemplate(
             "Verify Your Email",
             "One quick step to confirm your account.",
             """
             <p style="color:#a0997a;font-size:15px;margin:0 0 28px">
-              Hi there! Thanks for joining Simfinity. Click the button below to verify
+              Hi there! Thanks for joining Simfinity. Enter this code in the app to verify
               your email address and activate your account.
             </p>
             """,
-            link,
-            "Verify Email Address",
-            "This link expires in 24 hours. If you didn't create a Simfinity account, you can safely ignore this email."
+            otpCode,
+            "This code expires in 10 minutes. If you didn't create a Simfinity account, you can safely ignore this email."
         );
         send(toEmail, "Verify your Simfinity account", html);
     }
@@ -54,23 +52,26 @@ public class EmailService {
     // ── Password Reset ────────────────────────────────────────────────────────
 
     public void sendPasswordResetEmail(String toEmail, String token) {
-        // Deep link opens the app directly on the user's phone
+        // A real https:// link works in every mail client on every device — unlike a
+        // simfinity:// deep link, which desktop email clients can't open at all, and
+        // which silently fails on phones too if the OS/mail app doesn't hand it off to
+        // the app. The web build serves this same reset-password screen, so it's a
+        // fully working destination on its own, no native app required.
+        String webLink = webBaseUrl + "/reset-password?token=" + token;
         String deepLink = "simfinity://reset-password?token=" + token;
         String html = baseTemplate(
             "Reset Your Password",
             "We received a request to reset your password.",
             """
             <p style="color:#a0997a;font-size:15px;margin:0 0 28px">
-              Tap the button below on your phone to open Simfinity and choose a new password.
+              Tap the button below to choose a new password.
               This link expires in <strong style="color:#fff">1 hour</strong>.
             </p>
-            <p style="color:#666;font-size:12px;margin:0 0 28px">
-              If the button doesn't open the app, make sure Simfinity is installed on this device.
-            </p>
             """,
-            deepLink,
+            webLink,
             "Reset Password",
-            "If you didn't request a password reset, ignore this email — your password will not change."
+            "If you didn't request a password reset, ignore this email — your password will not change.<br><br>"
+            + "On your phone with the app installed? <a href=\"" + deepLink + "\" style=\"color:#FFD700\">Open in the Simfinity app instead</a>."
         );
         send(toEmail, "Reset your Simfinity password", html);
     }
@@ -121,6 +122,59 @@ public class EmailService {
         } catch (Exception e) {
             log.warn("[Email] Failed to send '{}' to {}: {}", subject, toEmail, e.getMessage());
         }
+    }
+
+    private String otpTemplate(String title, String subtitle, String bodyHtml, String code, String footnote) {
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+        <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+          <table width="100%%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+            <tr><td align="center">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="max-width:520px">
+
+                <!-- Header -->
+                <tr><td style="padding-bottom:32px;text-align:center">
+                  <div style="display:inline-block;background:#111;border:1px solid rgba(255,215,0,0.25);border-radius:12px;padding:10px 20px">
+                    <span style="color:#FFD700;font-size:18px;font-weight:900;letter-spacing:2px">SIMFINITY</span>
+                  </div>
+                </td></tr>
+
+                <!-- Card -->
+                <tr><td style="background:#141414;border:1px solid rgba(255,215,0,0.15);border-radius:16px;padding:36px 32px">
+
+                  <h1 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 6px">%s</h1>
+                  <p style="color:#FFD700;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 24px">%s</p>
+
+                  <div style="width:100%%;height:2px;background:linear-gradient(90deg,#FFD700,transparent);margin:0 0 28px;border-radius:1px"></div>
+
+                  %s
+
+                  <!-- OTP Code -->
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">
+                    <tr><td align="center">
+                      <div style="display:inline-block;background:#0a0a0a;border:1px solid rgba(255,215,0,0.3);
+                                  border-radius:10px;padding:18px 32px">
+                        <span style="color:#FFD700;font-size:32px;font-weight:800;letter-spacing:10px">%s</span>
+                      </div>
+                    </td></tr>
+                  </table>
+
+                  <p style="color:#555;font-size:11px;margin:0;line-height:1.6">%s</p>
+                </td></tr>
+
+                <!-- Footer -->
+                <tr><td style="padding-top:24px;text-align:center">
+                  <p style="color:#333;font-size:10px;letter-spacing:1.5px;margin:0">ROOTED IN GHANA · SIMFINITY eSIM</p>
+                </td></tr>
+
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
+        """.formatted(title, subtitle, bodyHtml, code, footnote);
     }
 
     private String baseTemplate(String title, String subtitle, String bodyHtml,

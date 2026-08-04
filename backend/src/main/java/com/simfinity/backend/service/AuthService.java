@@ -6,6 +6,8 @@ import com.simfinity.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -13,17 +15,33 @@ import java.util.UUID;
 @Service
 public class AuthService {
 
+    private static final Duration OTP_TTL = Duration.ofMinutes(10);
+    private static final int OTP_MAX_ATTEMPTS = 5;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
+    private final RedisCacheHelper redisCache;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil, EmailService emailService) {
+                       JwtUtil jwtUtil, EmailService emailService, RedisCacheHelper redisCache) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.emailService = emailService;
+        this.redisCache = redisCache;
+    }
+
+    private static String otpKey(String email) {
+        return "otp:email-verify:" + email;
+    }
+
+    private void generateAndSendOtp(String email) {
+        String code = String.format("%06d", RANDOM.nextInt(1_000_000));
+        redisCache.put(otpKey(email), Map.of("code", code, "attempts", 0), OTP_TTL);
+        emailService.sendVerificationEmail(email, code);
     }
 
     public Map<String, Object> register(String email, String password, String fullName, String referredByCode) {
@@ -42,9 +60,6 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setFullName(fullName != null ? fullName.trim() : "");
 
-        String verificationToken = UUID.randomUUID().toString().replace("-", "");
-        user.setVerificationToken(verificationToken);
-
         userRepository.save(user);
 
         String suffix = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 4).toUpperCase();
@@ -58,8 +73,8 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Send verification email — best-effort, don't block registration
-        emailService.sendVerificationEmail(normalizedEmail, verificationToken);
+        // Send verification OTP — best-effort, don't block registration
+        generateAndSendOtp(normalizedEmail);
 
         String token = jwtUtil.generateToken(user.getEmail());
         return Map.of(
@@ -97,13 +112,41 @@ public class AuthService {
         }).orElse(Map.of("error", "No account found with this email."));
     }
 
-    public Map<String, Object> verifyEmail(String token) {
-        return userRepository.findByVerificationToken(token).map(user -> {
-            user.setEmailVerified(true);
-            user.setVerificationToken(null);
-            userRepository.save(user);
-            return Map.<String, Object>of("success", true);
-        }).orElse(Map.of("error", "Invalid or already used verification link."));
+    public Map<String, Object> verifyEmailOtp(String email, String code) {
+        String normalizedEmail = email.toLowerCase().trim();
+        User user = userRepository.findByEmail(normalizedEmail).orElse(null);
+        if (user == null) {
+            return Map.of("error", "Account not found.");
+        }
+        if (user.isEmailVerified()) {
+            return Map.of("success", true, "message", "Email already verified.");
+        }
+        if (code == null || code.isBlank()) {
+            return Map.of("error", "Enter the 6-digit code sent to your email.");
+        }
+
+        String key = otpKey(normalizedEmail);
+        Map<String, Object> entry = redisCache.get(key);
+        if (entry == null) {
+            return Map.of("error", "This code has expired. Request a new one.");
+        }
+
+        String storedCode = String.valueOf(entry.get("code"));
+        if (!storedCode.equals(code.trim())) {
+            int attempts = ((Number) entry.getOrDefault("attempts", 0)).intValue() + 1;
+            if (attempts >= OTP_MAX_ATTEMPTS) {
+                redisCache.delete(key);
+                return Map.of("error", "Too many incorrect attempts. Request a new code.");
+            }
+            redisCache.put(key, Map.of("code", storedCode, "attempts", attempts), OTP_TTL);
+            int remaining = OTP_MAX_ATTEMPTS - attempts;
+            return Map.of("error", "Incorrect code. " + remaining + (remaining == 1 ? " attempt" : " attempts") + " remaining.");
+        }
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        redisCache.delete(key);
+        return Map.of("success", true);
     }
 
     public Map<String, Object> forgotPassword(String email) {
@@ -124,10 +167,7 @@ public class AuthService {
             if (user.isEmailVerified()) {
                 return Map.<String, Object>of("success", true, "message", "Email already verified.");
             }
-            String token = UUID.randomUUID().toString().replace("-", "");
-            user.setVerificationToken(token);
-            userRepository.save(user);
-            emailService.sendVerificationEmail(user.getEmail(), token);
+            generateAndSendOtp(user.getEmail());
             return Map.<String, Object>of("success", true);
         }).orElse(Map.of("error", "Account not found."));
     }
