@@ -42,7 +42,13 @@ export default function SignUpScreen() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await loginWithToken(data.token, data.email, data.fullName, data.userId, data.emailVerified ?? false);
+        await loginWithToken(data.token, data.userId, {
+          email: data.email,
+          fullName: data.fullName,
+          emailVerified: data.emailVerified ?? false,
+          phoneNumber: data.phoneNumber ?? '',
+          dateOfBirth: data.dateOfBirth ?? '',
+        });
         router.replace({ pathname: '/verify-email', params: { email: data.email } });
       } else {
         setError(data.error || 'Registration failed. Please try again.');

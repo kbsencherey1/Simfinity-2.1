@@ -7,6 +7,14 @@ import { API_BASE } from '../config';
 import { registerPushToken } from '../hooks/usePushNotifications';
 import { Language, translate } from '../i18n/translations';
 
+interface LoginProfile {
+  email: string;
+  fullName: string;
+  emailVerified: boolean;
+  phoneNumber: string;
+  dateOfBirth: string;
+}
+
 export const CURRENCIES = [
   { code: 'GHS', symbol: 'GH₵', name: 'Ghana Cedi' },
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -63,7 +71,7 @@ interface AppContextType {
   userId: number | null;
   avatarUrl: string | null;
   setAvatarUrl: (url: string | null) => void;
-  loginWithToken: (token: string, email: string, fullName: string, userId: number, emailVerified: boolean) => Promise<void>;
+  loginWithToken: (token: string, userId: number, profile: LoginProfile) => Promise<void>;
   logout: () => Promise<void>;
   activeEsims: ESimSubscription[];
   setActiveEsims: (e: ESimSubscription[]) => void;
@@ -212,8 +220,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {});
   }, [fetchEsims, fetchPayments, fetchReferralCode]);
 
-  const loginWithToken = async (tok: string, email: string, fullName: string, uid: number, emailVerified: boolean) => {
-    const updatedUser: UserProfile = { ...INITIAL_USER, email, fullName, emailVerified };
+  const loginWithToken = async (tok: string, uid: number, profile: LoginProfile) => {
+    const updatedUser: UserProfile = {
+      ...INITIAL_USER,
+      email: profile.email,
+      fullName: profile.fullName,
+      emailVerified: profile.emailVerified,
+      phoneNumber: profile.phoneNumber,
+      dateOfBirth: profile.dateOfBirth,
+    };
     setToken(tok);
     setUserId(uid);
     setAvatarUrl(`${API_BASE}/api/user/avatar/${uid}?t=${Date.now()}`);

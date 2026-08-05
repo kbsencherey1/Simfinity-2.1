@@ -101,6 +101,22 @@ public class UserController {
         return ResponseEntity.ok().headers(headers).body(Files.readAllBytes(file));
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> body, Authentication auth) {
+        return userRepository.findByEmail(auth.getName()).map(user -> {
+            if (body.containsKey("fullName")) user.setFullName(body.get("fullName"));
+            if (body.containsKey("phoneNumber")) user.setPhoneNumber(body.get("phoneNumber"));
+            if (body.containsKey("dateOfBirth")) user.setDateOfBirth(body.get("dateOfBirth"));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "fullName", user.getFullName() != null ? user.getFullName() : "",
+                "phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "",
+                "dateOfBirth", user.getDateOfBirth() != null ? user.getDateOfBirth() : ""
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/push-token")
     public ResponseEntity<?> savePushToken(@RequestBody Map<String, String> body, Authentication auth) {
         return userRepository.findByEmail(auth.getName()).map(user -> {

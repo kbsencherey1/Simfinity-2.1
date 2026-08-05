@@ -10,12 +10,14 @@ import {
   Platform,
   Modal,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, glass } from '../components/styles';
 import { useApp } from '../context/AppContext';
 import { AvatarImage } from '../components/AvatarImage';
+import { API_BASE } from '../config';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -37,12 +39,14 @@ function formatDOB(day: string, month: string, year: string) {
 type PickerField = 'day' | 'month' | 'year' | null;
 
 export default function PersonalInfoScreen() {
-  const { user, setUser, avatarUrl } = useApp();
+  const { user, setUser, avatarUrl, token } = useApp();
   const [form, setForm] = useState({ ...user });
   const [dobDay, setDobDay] = useState('');
   const [dobMonth, setDobMonth] = useState('');
   const [dobYear, setDobYear] = useState('');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState<PickerField>(null);
 
   // user is only known for certain once AppContext's async session restore
@@ -57,14 +61,39 @@ export default function PersonalInfoScreen() {
     setDobYear(dob.year);
   }, [user]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedForm = { ...form, dateOfBirth: formatDOB(dobDay, dobMonth, dobYear) };
-    setUser(updatedForm);
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      router.back();
-    }, 1500);
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/user/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          fullName: updatedForm.fullName,
+          phoneNumber: updatedForm.phoneNumber,
+          dateOfBirth: updatedForm.dateOfBirth,
+        }),
+      });
+      if (res.ok) {
+        setUser(updatedForm);
+        setSaved(true);
+        setTimeout(() => {
+          setSaved(false);
+          router.back();
+        }, 1500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Could not save changes. Try again.');
+      }
+    } catch {
+      setError('Network error. Make sure the server is running.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const pickerOptions = pickerOpen === 'day' ? DAYS : pickerOpen === 'month' ? MONTHS : YEARS;
@@ -108,22 +137,16 @@ export default function PersonalInfoScreen() {
             </View>
           )}
 
+          {error && (
+            <View style={styles.errorBar}>
+              <Text style={styles.errorBarText}>{error}</Text>
+            </View>
+          )}
+
           {/* Avatar */}
           <View style={[glass.panel, styles.avatarCard]}>
             <View style={styles.avatarWrap}>
               <AvatarImage url={avatarUrl} size={72} />
-              {user.emailVerified && (
-                <View style={styles.verifiedDot}>
-                  <Text style={styles.verifiedDotText}>✓</Text>
-                </View>
-              )}
-            </View>
-            <View style={styles.verifiedRow}>
-              <View style={[styles.verifiedBadge, !user.emailVerified && styles.unverifiedBadge]}>
-                <Text style={[styles.verifiedBadgeText, !user.emailVerified && styles.unverifiedBadgeText]}>
-                  {user.emailVerified ? 'Verified Status' : 'Email Not Verified'}
-                </Text>
-              </View>
             </View>
           </View>
 
@@ -184,10 +207,19 @@ export default function PersonalInfoScreen() {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed, saved && styles.saveBtnSuccess]}
+            style={({ pressed }) => [
+              styles.saveBtn,
+              pressed && styles.saveBtnPressed,
+              saved && styles.saveBtnSuccess,
+              saving && { opacity: 0.7 },
+            ]}
             onPress={handleSave}
+            disabled={saving}
           >
-            <Text style={styles.saveBtnText}>{saved ? 'Saved!' : 'Save Changes'}</Text>
+            {saving
+              ? <ActivityIndicator color="#000" />
+              : <Text style={styles.saveBtnText}>{saved ? 'Saved!' : 'Save Changes'}</Text>
+            }
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -260,25 +292,14 @@ const styles = StyleSheet.create({
     borderRadius: 10, padding: 12, alignItems: 'center',
   },
   successBarText: { color: COLORS.greenLight, fontWeight: '700', fontSize: 12 },
+  errorBar: {
+    backgroundColor: 'rgba(204,78,60,0.15)', borderWidth: 1, borderColor: 'rgba(204,78,60,0.4)',
+    borderRadius: 10, padding: 12, alignItems: 'center',
+  },
+  errorBarText: { color: COLORS.terracotta, fontWeight: '700', fontSize: 12, textAlign: 'center' },
 
   avatarCard: { alignItems: 'center', padding: 20, gap: 12 },
   avatarWrap: { position: 'relative' },
-  verifiedDot: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#1a1a1a',
-  },
-  verifiedDotText: { color: '#000', fontSize: 10, fontWeight: '900' },
-  verifiedRow: { alignItems: 'center' },
-  verifiedBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(255,215,0,0.1)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)',
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
-  },
-  verifiedBadgeText: { color: COLORS.gold, fontSize: 10, fontWeight: '700' },
-  unverifiedBadge: { backgroundColor: 'rgba(204,78,60,0.1)', borderColor: 'rgba(204,78,60,0.25)' },
-  unverifiedBadgeText: { color: COLORS.terracotta },
 
   formCard: { padding: 18, gap: 14 },
   field: { gap: 6 },

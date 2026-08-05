@@ -82,6 +82,8 @@ public class AuthService {
             "token", token,
             "email", user.getEmail(),
             "fullName", user.getFullName() != null ? user.getFullName() : "",
+            "phoneNumber", "",
+            "dateOfBirth", "",
             "userId", user.getId(),
             "referralCode", user.getReferralCode(),
             "emailVerified", false
@@ -105,6 +107,8 @@ public class AuthService {
                 "token", token,
                 "email", user.getEmail(),
                 "fullName", user.getFullName() != null ? user.getFullName() : "",
+                "phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "",
+                "dateOfBirth", user.getDateOfBirth() != null ? user.getDateOfBirth() : "",
                 "userId", user.getId(),
                 "referralCode", user.getReferralCode(),
                 "emailVerified", user.isEmailVerified()
