@@ -48,8 +48,7 @@ services:
       DB_NAME: simfinity
       DB_USER: simfinity
       DB_PASSWORD: simfinity
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379
       # Set your real API keys here or in a .env file
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
