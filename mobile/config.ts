@@ -18,10 +18,9 @@ const devHost = hostUri
   : 'localhost';
 
 // Standalone (non-dev-client) builds don't get a Metro hostUri, so they can't
-// infer the dev machine's address the way __DEV__ builds do. Point at this
-// machine's LAN IP so an installed APK can reach the locally-run backend from
-// a phone on the same WiFi network — update this if the IP changes, and swap
-// in a real hosted URL once there's an actual deployed backend.
+// infer the dev machine's address the way __DEV__ builds do. Point at the
+// hosted Render backend so an installed APK works over any network, not just
+// this machine's LAN.
 export const API_BASE = __DEV__
   ? `http://${devHost}:3000`
-  : 'http://192.168.8.123:3000';
+  : 'https://simfinity-backend-a06f.onrender.com';
