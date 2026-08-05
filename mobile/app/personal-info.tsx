@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -38,13 +38,24 @@ type PickerField = 'day' | 'month' | 'year' | null;
 
 export default function PersonalInfoScreen() {
   const { user, setUser, avatarUrl } = useApp();
-  const initialDOB = parseDOB(user.dateOfBirth ?? '');
   const [form, setForm] = useState({ ...user });
-  const [dobDay, setDobDay] = useState(initialDOB.day);
-  const [dobMonth, setDobMonth] = useState(initialDOB.month);
-  const [dobYear, setDobYear] = useState(initialDOB.year);
+  const [dobDay, setDobDay] = useState('');
+  const [dobMonth, setDobMonth] = useState('');
+  const [dobYear, setDobYear] = useState('');
   const [saved, setSaved] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<PickerField>(null);
+
+  // user is only known for certain once AppContext's async session restore
+  // resolves — a direct/refreshed page load can render this screen before
+  // that finishes, so re-sync once the real data arrives instead of getting
+  // stuck on the useState initializer's stale first snapshot.
+  useEffect(() => {
+    setForm({ ...user });
+    const dob = parseDOB(user.dateOfBirth ?? '');
+    setDobDay(dob.day);
+    setDobMonth(dob.month);
+    setDobYear(dob.year);
+  }, [user]);
 
   const handleSave = () => {
     const updatedForm = { ...form, dateOfBirth: formatDOB(dobDay, dobMonth, dobYear) };
@@ -101,13 +112,17 @@ export default function PersonalInfoScreen() {
           <View style={[glass.panel, styles.avatarCard]}>
             <View style={styles.avatarWrap}>
               <AvatarImage url={avatarUrl} size={72} />
-              <View style={styles.verifiedDot}>
-                <Text style={styles.verifiedDotText}>✓</Text>
-              </View>
+              {user.emailVerified && (
+                <View style={styles.verifiedDot}>
+                  <Text style={styles.verifiedDotText}>✓</Text>
+                </View>
+              )}
             </View>
             <View style={styles.verifiedRow}>
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedBadgeText}>Verified Status</Text>
+              <View style={[styles.verifiedBadge, !user.emailVerified && styles.unverifiedBadge]}>
+                <Text style={[styles.verifiedBadgeText, !user.emailVerified && styles.unverifiedBadgeText]}>
+                  {user.emailVerified ? 'Verified Status' : 'Email Not Verified'}
+                </Text>
               </View>
             </View>
           </View>
@@ -262,6 +277,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
   },
   verifiedBadgeText: { color: COLORS.gold, fontSize: 10, fontWeight: '700' },
+  unverifiedBadge: { backgroundColor: 'rgba(204,78,60,0.1)', borderColor: 'rgba(204,78,60,0.25)' },
+  unverifiedBadgeText: { color: COLORS.terracotta },
 
   formCard: { padding: 18, gap: 14 },
   field: { gap: 6 },

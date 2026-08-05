@@ -48,6 +48,7 @@ export const INITIAL_PLANS: ESimPlan[] = [
 export const INITIAL_USER: UserProfile = {
   fullName: 'Kwame Mensah',
   email: 'kwame@example.com',
+  emailVerified: false,
   phoneNumber: '+233 24 555 0123',
   dateOfBirth: '14 May 1992',
   ghanaCardId: 'GHA-7123***-0',

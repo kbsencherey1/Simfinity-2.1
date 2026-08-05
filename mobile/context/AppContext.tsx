@@ -63,7 +63,7 @@ interface AppContextType {
   userId: number | null;
   avatarUrl: string | null;
   setAvatarUrl: (url: string | null) => void;
-  loginWithToken: (token: string, email: string, fullName: string, userId: number) => Promise<void>;
+  loginWithToken: (token: string, email: string, fullName: string, userId: number, emailVerified: boolean) => Promise<void>;
   logout: () => Promise<void>;
   activeEsims: ESimSubscription[];
   setActiveEsims: (e: ESimSubscription[]) => void;
@@ -212,8 +212,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {});
   }, [fetchEsims, fetchPayments, fetchReferralCode]);
 
-  const loginWithToken = async (tok: string, email: string, fullName: string, uid: number) => {
-    const updatedUser: UserProfile = { ...INITIAL_USER, email, fullName };
+  const loginWithToken = async (tok: string, email: string, fullName: string, uid: number, emailVerified: boolean) => {
+    const updatedUser: UserProfile = { ...INITIAL_USER, email, fullName, emailVerified };
     setToken(tok);
     setUserId(uid);
     setAvatarUrl(`${API_BASE}/api/user/avatar/${uid}?t=${Date.now()}`);

@@ -1,6 +1,7 @@
 export interface UserProfile {
   fullName: string;
   email: string;
+  emailVerified: boolean;
   phoneNumber: string;
   dateOfBirth: string;
   ghanaCardId: string;

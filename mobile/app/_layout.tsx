@@ -57,7 +57,6 @@ export default function RootLayout() {
                 <Stack.Screen name="checkout" />
                 <Stack.Screen name="activate-esim" />
                 <Stack.Screen name="personal-info" />
-                <Stack.Screen name="travel-docs" />
                 <Stack.Screen name="refer-friend" />
                 <Stack.Screen name="gift-esim" />
                 <Stack.Screen name="verify-email" />

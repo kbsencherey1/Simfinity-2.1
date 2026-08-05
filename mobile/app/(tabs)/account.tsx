@@ -178,9 +178,11 @@ export default function AccountScreen() {
                 <Text style={styles.editBadgeText}>✎</Text>
               </View>
             )}
-            <View style={styles.verifiedDot}>
-              <Text style={styles.verifiedDotIcon}>✓</Text>
-            </View>
+            {user.emailVerified && (
+              <View style={styles.verifiedDot}>
+                <Text style={styles.verifiedDotIcon}>✓</Text>
+              </View>
+            )}
           </Pressable>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{user.fullName}</Text>
@@ -197,19 +199,6 @@ export default function AccountScreen() {
             <View style={styles.menuItemText}>
               <Text style={styles.menuLabel}>{t('account.personalInfo')}</Text>
               <Text style={styles.menuSub}>{t('account.personalInfoSub')}</Text>
-            </View>
-            <Text style={styles.menuArrow}>›</Text>
-          </Pressable>
-
-          <View style={styles.menuDivider} />
-
-          <Pressable
-            style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-            onPress={() => router.push('/travel-docs')}
-          >
-            <View style={styles.menuItemText}>
-              <Text style={styles.menuLabel}>{t('account.travelDocs')}</Text>
-              <Text style={styles.menuSub}>{t('account.travelDocsSub')}</Text>
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </Pressable>

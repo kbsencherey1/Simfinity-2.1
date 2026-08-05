@@ -12,7 +12,7 @@ import { API_BASE } from '../config';
 const CODE_LENGTH = 6;
 
 export default function VerifyEmailScreen() {
-  const { user, token } = useApp();
+  const { user, setUser, token } = useApp();
   const params = useLocalSearchParams<{ email?: string }>();
   const displayEmail = params.email ?? user.email;
 
@@ -39,6 +39,7 @@ export default function VerifyEmailScreen() {
       const data = await res.json();
       if (res.ok && data.success) {
         setVerified(true);
+        setUser({ ...user, emailVerified: true });
         setTimeout(() => router.replace('/(tabs)'), 900);
       } else {
         setError(data.error ?? 'Incorrect code. Try again.');

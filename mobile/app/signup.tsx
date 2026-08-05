@@ -42,7 +42,7 @@ export default function SignUpScreen() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await loginWithToken(data.token, data.email, data.fullName, data.userId);
+        await loginWithToken(data.token, data.email, data.fullName, data.userId, data.emailVerified ?? false);
         router.replace({ pathname: '/verify-email', params: { email: data.email } });
       } else {
         setError(data.error || 'Registration failed. Please try again.');

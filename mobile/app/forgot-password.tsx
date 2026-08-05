@@ -58,7 +58,7 @@ export default function ForgotPasswordScreen() {
                   you'll receive a password reset link shortly.
                 </Text>
                 <Text style={styles.hint}>
-                  Tap the link in the email on your phone — it will open Simfinity directly.
+                  Tap the link in the email to open it in your browser and choose a new password.
                 </Text>
                 <Pressable
                   style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.8 }]}
