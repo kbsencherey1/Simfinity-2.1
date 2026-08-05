@@ -6,7 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import MapView, { Circle, Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +24,6 @@ interface CountryCenter {
 
 // OpenCellID free tier limits BBOX to ~4,000,000 sq.m (~1km radius).
 // bboxSize is in degrees; 0.008° ≈ 890m at the equator → safely under the limit.
-// latDelta/lngDelta control the map viewport (a bit wider than the fetch area).
 const COUNTRY_CENTERS: Record<string, CountryCenter> = {
   GH: { lat: 5.6037,  lng: -0.187,    latDelta: 0.025, lngDelta: 0.025, bboxSize: 0.008, city: 'Accra' },
   NG: { lat: 6.5244,  lng: 3.3792,    latDelta: 0.025, lngDelta: 0.025, bboxSize: 0.008, city: 'Lagos' },
@@ -44,6 +43,7 @@ const COUNTRY_CENTERS: Record<string, CountryCenter> = {
 };
 
 const DEFAULT_CENTER: CountryCenter = COUNTRY_CENTERS.GH;
+const CITY_ZOOM = 15;
 
 interface CoveragePoint {
   lat: number;
@@ -55,20 +55,6 @@ interface CoveragePoint {
   network?: string | null;
 }
 
-function signalFill(weight: number): string {
-  if (weight >= 0.72) return 'rgba(34, 197, 94, 0.38)';
-  if (weight >= 0.45) return 'rgba(234, 179, 8, 0.38)';
-  if (weight >= 0.22) return 'rgba(249, 115, 22, 0.38)';
-  return 'rgba(239, 68, 68, 0.38)';
-}
-
-function signalStroke(weight: number): string {
-  if (weight >= 0.72) return 'rgba(34, 197, 94, 0.65)';
-  if (weight >= 0.45) return 'rgba(234, 179, 8, 0.65)';
-  if (weight >= 0.22) return 'rgba(249, 115, 22, 0.65)';
-  return 'rgba(239, 68, 68, 0.65)';
-}
-
 const LEGEND = [
   { color: '#22c55e', label: 'Excellent' },
   { color: '#eab308', label: 'Good' },
@@ -77,6 +63,85 @@ const LEGEND = [
 ] as const;
 
 type LocationStatus = 'idle' | 'locating' | 'found' | 'denied' | 'error';
+
+// Static Leaflet + OpenStreetMap page — no Google Maps / API key needed, unlike
+// react-native-maps. Kept fully static (no interpolated data) and driven entirely
+// via injectJavaScript calls from React Native, so there's never a risk of dynamic
+// values (coordinates, weights) breaking the embedded HTML/JS.
+const MAP_HTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; background: #050505; }
+    .leaflet-control-attribution { font-size: 9px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map', { zoomControl: false, attributionControl: true })
+      .setView([${DEFAULT_CENTER.lat}, ${DEFAULT_CENTER.lng}], ${CITY_ZOOM});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    var circleLayer = L.layerGroup().addTo(map);
+    var markerLayer = L.layerGroup().addTo(map);
+
+    var goldIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:22px;height:22px;border-radius:11px;background:#FFD700;border:2px solid #1a1a1a;box-shadow:0 0 0 1px rgba(255,255,255,0.3);"></div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+
+    function fillColorFor(w) {
+      if (w >= 0.72) return 'rgba(34, 197, 94, 0.38)';
+      if (w >= 0.45) return 'rgba(234, 179, 8, 0.38)';
+      if (w >= 0.22) return 'rgba(249, 115, 22, 0.38)';
+      return 'rgba(239, 68, 68, 0.38)';
+    }
+    function strokeColorFor(w) {
+      if (w >= 0.72) return 'rgba(34, 197, 94, 0.65)';
+      if (w >= 0.45) return 'rgba(234, 179, 8, 0.65)';
+      if (w >= 0.22) return 'rgba(249, 115, 22, 0.65)';
+      return 'rgba(239, 68, 68, 0.65)';
+    }
+
+    function recenter(lat, lng, zoom) {
+      map.flyTo([lat, lng], zoom, { duration: 0.6 });
+    }
+
+    function setMyLocation(lat, lng) {
+      markerLayer.clearLayers();
+      L.marker([lat, lng], { icon: goldIcon }).addTo(markerLayer);
+    }
+
+    function setPoints(pointsJson) {
+      var points = JSON.parse(pointsJson);
+      circleLayer.clearLayers();
+      points.forEach(function (pt) {
+        L.circle([pt.lat, pt.lng], {
+          radius: 250,
+          fillColor: fillColorFor(pt.weight),
+          fillOpacity: 1,
+          color: strokeColorFor(pt.weight),
+          weight: 0.5,
+        }).addTo(circleLayer);
+      });
+    }
+
+    window.isMapReady = true;
+  </script>
+</body>
+</html>
+`;
 
 export default function CoverageMapScreen() {
   const { country = 'GH', planName = 'Coverage Map', networks = '' } = useLocalSearchParams<{
@@ -97,10 +162,8 @@ export default function CoverageMapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [networkFilterAvailable, setNetworkFilterAvailable] = useState(false);
-  const mapRef = useRef<MapView>(null);
-
-  // Each tower circle = 250m radius; visible at city-block zoom level
-  const circleRadius = 250;
+  const [mapReady, setMapReady] = useState(false);
+  const webViewRef = useRef<WebView>(null);
 
   const useMyLocation = useCallback(async () => {
     setLocationStatus('locating');
@@ -121,12 +184,6 @@ export default function CoverageMapScreen() {
       };
       setMyLocation({ lat: next.lat, lng: next.lng });
       setMapCenter(next);
-      mapRef.current?.animateToRegion({
-        latitude: next.lat,
-        longitude: next.lng,
-        latitudeDelta: next.latDelta,
-        longitudeDelta: next.lngDelta,
-      }, 600);
       setLocationStatus('found');
     } catch {
       setLocationStatus('error');
@@ -170,6 +227,29 @@ export default function CoverageMapScreen() {
     return () => { cancelled = true; };
   }, [mapCenter, networks]);
 
+  // Push state into the map only once the page has actually finished loading —
+  // these effects fire on data changes that can happen before or after that.
+  useEffect(() => {
+    if (!mapReady) return;
+    webViewRef.current?.injectJavaScript(
+      `recenter(${mapCenter.lat}, ${mapCenter.lng}, ${CITY_ZOOM}); true;`
+    );
+  }, [mapReady, mapCenter]);
+
+  useEffect(() => {
+    if (!mapReady || !myLocation) return;
+    webViewRef.current?.injectJavaScript(
+      `setMyLocation(${myLocation.lat}, ${myLocation.lng}); true;`
+    );
+  }, [mapReady, myLocation]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+    webViewRef.current?.injectJavaScript(
+      `setPoints(${JSON.stringify(JSON.stringify(points))}); true;`
+    );
+  }, [mapReady, points]);
+
   const displayName = decodeURIComponent(planName as string);
 
   return (
@@ -194,50 +274,31 @@ export default function CoverageMapScreen() {
       </SafeAreaView>
 
       <View style={styles.mapWrap}>
-        <MapView
-          ref={mapRef}
+        <WebView
+          ref={webViewRef}
           style={styles.map}
-          initialRegion={{
-            latitude: countryCenter.lat,
-            longitude: countryCenter.lng,
-            latitudeDelta: countryCenter.latDelta,
-            longitudeDelta: countryCenter.lngDelta,
-          }}
-        >
-          {myLocation && (
-            <Marker
-              coordinate={{ latitude: myLocation.lat, longitude: myLocation.lng }}
-              title="You are here"
-              pinColor={COLORS.gold}
-            />
-          )}
-          {points.map((pt, i) => (
-            <Circle
-              key={i}
-              center={{ latitude: pt.lat, longitude: pt.lng }}
-              radius={circleRadius}
-              fillColor={signalFill(pt.weight)}
-              strokeColor={signalStroke(pt.weight)}
-              strokeWidth={0.5}
-            />
-          ))}
-        </MapView>
+          source={{ html: MAP_HTML }}
+          onLoadEnd={() => setMapReady(true)}
+          javaScriptEnabled
+          domStorageEnabled
+          originWhitelist={['*']}
+        />
 
-        {isLoading && (
+        {(isLoading || !mapReady) && (
           <View style={styles.overlay} pointerEvents="none">
             <ActivityIndicator size="large" color={COLORS.gold} />
             <Text style={styles.overlayText}>Fetching tower data…</Text>
           </View>
         )}
 
-        {!isLoading && error && (
+        {mapReady && !isLoading && error && (
           <View style={styles.overlay} pointerEvents="none">
             <Text style={styles.overlayTitle}>Could not load coverage</Text>
             <Text style={styles.overlayText}>{error}</Text>
           </View>
         )}
 
-        {!isLoading && !error && points.length === 0 && (
+        {mapReady && !isLoading && !error && points.length === 0 && (
           <View style={styles.overlay} pointerEvents="none">
             <Text style={styles.overlayTitle}>No data available</Text>
             <Text style={styles.overlayText}>No cell tower records found for this area.</Text>
@@ -245,7 +306,7 @@ export default function CoverageMapScreen() {
         )}
 
         {/* Tower count badge */}
-        {!isLoading && points.length > 0 && (
+        {mapReady && !isLoading && points.length > 0 && (
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>
               {points.length} tower{points.length !== 1 ? 's' : ''}
@@ -320,7 +381,7 @@ const styles = StyleSheet.create({
   headerSpacer: { minWidth: 56 },
 
   mapWrap: { flex: 1, position: 'relative' },
-  map: { flex: 1 },
+  map: { flex: 1, backgroundColor: '#050505' },
 
   overlay: {
     ...StyleSheet.absoluteFillObject,
